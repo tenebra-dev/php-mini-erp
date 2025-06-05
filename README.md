@@ -2,22 +2,6 @@
 
 Este projeto é uma API REST simples construída em **PHP** com **MySQL**, utilizando **Docker** e **Apache** para facilitar o ambiente de desenvolvimento.
 
----
-
-## 🧱 Estrutura do Projeto
-
-php-test-restapi/
-├── api/ # Código-fonte da API (classes, lógica)
-├── public/ # Pasta pública acessível via Apache
-│ └── index.php # Ponto de entrada da aplicação
-├── vendor/ # Dependências gerenciadas via Composer
-├── docker/ # Arquivos de configuração do Docker
-│ ├── apache.conf # Configuração do Apache
-│ ├── docker-compose.yml
-│ └── Dockerfile # Dockerfile para imagem do PHP + Apache
-├── composer.json # Gerenciador de dependências do PHP
-└── README.md # Este arquivo
-
 ## 🚀 Como rodar a aplicação com Docker
 
 ### 🔽 Derrubar containers, imagens e volumes
