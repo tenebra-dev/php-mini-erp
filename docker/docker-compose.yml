@@ -1,0 +1,33 @@
+services:
+  php:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile
+    container_name: php_test
+    ports:
+      - "8080:80"
+    volumes:
+      - ../:/var/www/html
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_NAME=testdb
+      - DB_USER=testuser
+      - DB_PASS=testpass
+
+  db:
+    image: mysql:8.0
+    container_name: mysql_test
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: testuser
+      MYSQL_PASSWORD: testpass
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
