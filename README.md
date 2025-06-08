@@ -9,7 +9,7 @@ Este projeto é uma API REST simples construída em **PHP** com **MySQL**, utili
 Use este comando para **derrubar completamente** os containers, imagens e volumes criados:
 
 ```
-bash docker-compose -f docker/docker-compose.yml down
+docker-compose -f docker/docker-compose.yml down
 ```
 
 ### 📌 Explicação das flags:
