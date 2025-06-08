@@ -3,6 +3,7 @@ require __DIR__ . '/../layout/header.php';
 
 $productId = isset($params['id']) ? $params['id'] : null;
 ?>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2"><i class="fas fa-edit me-2"></i>Editar Produto</h1>

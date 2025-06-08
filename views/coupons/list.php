@@ -6,64 +6,60 @@ require __DIR__ . '/../layout/navigation.php';
 ?>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2"><i class="fas fa-tags me-2"></i>Lista de Cupons</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-            <a href="/coupons/create" class="btn btn-sm btn-outline-warning">
-                <i class="fas fa-plus me-1"></i> Novo Cupom
-            </a>
-        </div>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-tags me-2"></i>Lista de Cupons</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="/coupons/create" class="btn btn-sm btn-outline-warning">
+            <i class="fas fa-plus me-1"></i> Novo Cupom
+        </a>
     </div>
+</div>
 
-    <!-- Filtros e Busca -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form id="search-form">
-                <div class="row">
-                    <div class="col-md-4 mb-2">
-                        <input type="text" class="form-control" placeholder="Buscar por código..." name="search">
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <select class="form-select" name="status">
-                            <option value="">Todos status</option>
-                            <option value="valid">Válido</option>
-                            <option value="expired">Expirado</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <button type="submit" class="btn btn-warning w-100">
-                            <i class="fas fa-search me-1"></i> Filtrar
-                        </button>
-                    </div>
+<div class="card mb-4">
+    <div class="card-body">
+        <form id="search-form">
+            <div class="row">
+                <div class="col-md-4 mb-2">
+                    <input type="text" class="form-control" placeholder="Buscar por código..." name="search">
                 </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Tabela de Cupons -->
-    <div class="card">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover" id="coupons-table">
-                    <thead>
-                        <tr>
-                            <th>Código</th>
-                            <th>Tipo</th>
-                            <th>Valor</th>
-                            <th>Mínimo</th>
-                            <th>Validade</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td colspan="7" class="text-center">Carregando cupons...</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="col-md-3 mb-2">
+                    <select class="form-select" name="status">
+                        <option value="">Todos status</option>
+                        <option value="valid">Válido</option>
+                        <option value="expired">Expirado</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <button type="submit" class="btn btn-warning w-100">
+                        <i class="fas fa-search me-1"></i> Filtrar
+                    </button>
+                </div>
             </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="coupons-table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Tipo</th>
+                        <th>Valor</th>
+                        <th>Mínimo</th>
+                        <th>Validade</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="7" class="text-center">Carregando cupons...</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -132,6 +128,25 @@ $(document).ready(function() {
             });
         }
     });
+
+    // Função para exibir notificações
+    function showToast(type, message) {
+        const toast = `
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+            <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header bg-${type} text-white">
+                    <strong class="me-auto">${type === 'success' ? 'Sucesso' : 'Erro'}</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            </div>
+        </div>
+        `;
+        $('body').append(toast);
+        setTimeout(() => $('.toast').remove(), 3000);
+    }
 });
 </script>
 

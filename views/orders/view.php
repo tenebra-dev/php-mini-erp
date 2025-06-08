@@ -13,14 +13,31 @@ $orderId = isset($params['id']) ? $params['id'] : null;
     </div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-header">
-        <h5 class="mb-0">Informações do Pedido</h5>
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Informações do Pedido</h5>
+            </div>
+            <div class="card-body" id="order-details">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="card-body" id="order-details">
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Carregando...</span>
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Ações</h5>
+            </div>
+            <div class="card-body d-grid gap-2">
+                <a href="/orders/list" class="btn btn-outline-secondary">
+                    <i class="fas fa-list me-1"></i> Ver todos os pedidos
+                </a>
+                <!-- Adicione outras ações se necessário -->
             </div>
         </div>
     </div>

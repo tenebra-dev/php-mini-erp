@@ -1,5 +1,6 @@
 <?php 
-// As variáveis $pageTitle, $activePage, $breadcrumbs já foram definidas no index.php
+$pageTitle = "Dashboard";
+$activePage = "home";
 require __DIR__ . '/layout/header.php';
 ?>
 
@@ -15,78 +16,59 @@ require __DIR__ . '/layout/header.php';
 </div>
 
 <!-- Cards de estatísticas rápidas -->
-<div class="row mb-4">
-    <div class="col-md-3 mb-3">
-        <div class="card bg-primary text-white h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h4 class="card-title mb-0" id="total-products">--</h4>
-                        <p class="card-text">Produtos</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-boxes fa-2x opacity-75"></i>
-                    </div>
+<div class="row mb-4 g-3">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 bg-primary text-white h-100">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <h4 class="card-title mb-0" id="total-products">--</h4>
+                    <p class="card-text mb-0">Produtos</p>
                 </div>
+                <i class="fas fa-boxes fa-2x opacity-75"></i>
             </div>
-            <div class="card-footer bg-primary bg-opacity-75">
+            <div class="card-footer bg-primary bg-opacity-75 border-0">
                 <small><i class="fas fa-info-circle me-1"></i>Total de produtos cadastrados</small>
             </div>
         </div>
     </div>
-    
-    <div class="col-md-3 mb-3">
-        <div class="card bg-success text-white h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h4 class="card-title mb-0" id="total-orders">--</h4>
-                        <p class="card-text">Pedidos</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-shopping-cart fa-2x opacity-75"></i>
-                    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 bg-success text-white h-100">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <h4 class="card-title mb-0" id="total-orders">--</h4>
+                    <p class="card-text mb-0">Pedidos</p>
                 </div>
+                <i class="fas fa-shopping-cart fa-2x opacity-75"></i>
             </div>
-            <div class="card-footer bg-success bg-opacity-75">
+            <div class="card-footer bg-success bg-opacity-75 border-0">
                 <small><i class="fas fa-info-circle me-1"></i>Total de pedidos realizados</small>
             </div>
         </div>
     </div>
-    
-    <div class="col-md-3 mb-3">
-        <div class="card bg-warning text-white h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h4 class="card-title mb-0" id="total-coupons">--</h4>
-                        <p class="card-text">Cupons</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-tags fa-2x opacity-75"></i>
-                    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 bg-warning text-white h-100">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <h4 class="card-title mb-0" id="total-coupons">--</h4>
+                    <p class="card-text mb-0">Cupons</p>
                 </div>
+                <i class="fas fa-tags fa-2x opacity-75"></i>
             </div>
-            <div class="card-footer bg-warning bg-opacity-75">
+            <div class="card-footer bg-warning bg-opacity-75 border-0">
                 <small><i class="fas fa-info-circle me-1"></i>Cupons ativos disponíveis</small>
             </div>
         </div>
     </div>
-    
-    <div class="col-md-3 mb-3">
-        <div class="card bg-info text-white h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h4 class="card-title mb-0" id="cart-items"><?= isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0 ?></h4>
-                        <p class="card-text">No Carrinho</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-shopping-basket fa-2x opacity-75"></i>
-                    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 bg-info text-white h-100">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <h4 class="card-title mb-0" id="cart-items">--</h4>
+                    <p class="card-text mb-0">No Carrinho</p>
                 </div>
+                <i class="fas fa-shopping-basket fa-2x opacity-75"></i>
             </div>
-            <div class="card-footer bg-info bg-opacity-75">
+            <div class="card-footer bg-info bg-opacity-75 border-0">
                 <small><i class="fas fa-info-circle me-1"></i>Itens no carrinho atual</small>
             </div>
         </div>
@@ -122,7 +104,6 @@ require __DIR__ . '/layout/header.php';
             </div>
         </div>
     </div>
-    
     <div class="col-md-4 mb-4">
         <div class="card h-100 shadow-sm border-0">
             <div class="card-body text-center p-4">
@@ -135,16 +116,10 @@ require __DIR__ . '/layout/header.php';
                     <a href="/orders/list" class="btn btn-success">
                         <i class="bi bi-cart me-1"></i> Ver Pedidos
                     </a>
-                    <?php if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])): ?>
-                    <a href="/orders/cart" class="btn btn-outline-success">
-                        <i class="bi bi-cart-check me-1"></i> Carrinho (<?= count($_SESSION['cart']) ?>)
-                    </a>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
-    
     <div class="col-md-4 mb-4">
         <div class="card h-100 shadow-sm border-0">
             <div class="card-body text-center p-4">
@@ -169,19 +144,14 @@ require __DIR__ . '/layout/header.php';
 <!-- Seção de ações rápidas -->
 <div class="row mt-4">
     <div class="col-12">
-        <div class="card">
-            <div class="card-header">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-light">
                 <h5 class="card-title mb-0">
                     <i class="fas fa-bolt me-2"></i>Ações Rápidas
                 </h5>
             </div>
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3 mb-2">
-                        <a href="/products/create" class="btn btn-outline-primary btn-sm w-100">
-                            <i class="fas fa-plus me-1"></i> Novo Produto
-                        </a>
-                    </div>
+                <div class="row g-2">
                     <div class="col-md-3 mb-2">
                         <a href="/products/create" class="btn btn-outline-primary btn-sm w-100">
                             <i class="fas fa-plus me-1"></i> Novo Produto
@@ -207,5 +177,33 @@ require __DIR__ . '/layout/header.php';
         </div>
     </div>
 </div>
+
+<script>
+$(document).ready(function() {
+    // Carrega estatísticas do dashboard
+    $.get('/api/products', function(response) {
+        $('#total-products').text(response.total || response.data?.length || 0);
+    });
+
+    $.get('/api/orders', function(response) {
+        $('#total-orders').text(response.total || response.data?.length || 0);
+    });
+
+    $.get('/api/coupons', function(response) {
+        $('#total-coupons').text(response.total || response.data?.length || 0);
+    });
+
+    // Carrega itens do carrinho
+    $.get('/api/cart', function(response) {
+        let count = 0;
+        if (response.cart && response.cart.items) {
+            Object.values(response.cart.items).forEach(item => {
+                count += item.quantity ? parseInt(item.quantity) : 1;
+            });
+        }
+        $('#cart-items').text(count);
+    });
+});
+</script>
 
 <?php require __DIR__ . '/layout/footer.php'; ?>

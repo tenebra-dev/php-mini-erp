@@ -3,11 +3,11 @@
     </div>
 
     <!-- Footer -->
-    <footer class="text-center py-3 mt-5" style="margin-left: var(--sidebar-width); background-color: #f8f9fa; border-top: 1px solid #dee2e6;">
+    <footer class="text-center py-3 mt-5 bg-light border-top" style="margin-left: var(--sidebar-width);">
         <div class="container-fluid">
             <div class="row">
                 <div class="col-12">
-                    <p class="mb-1 text-muted">&copy; <?= date('Y') ?> Mini ERP. Todos os direitos reservados.</p>
+                    <p class="mb-1 text-muted">&copy; <?= date('Y') ?> <b>Mini ERP</b>. Todos os direitos reservados.</p>
                     <p class="mb-0 small text-muted">
                         Desenvolvido com <i class="text-danger fas fa-heart"></i> para gestão empresarial
                     </p>

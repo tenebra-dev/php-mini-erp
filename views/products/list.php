@@ -117,7 +117,7 @@ $(document).ready(function() {
                         <tr>
                             <td>${product.id}</td>
                             <td>
-                                <img src="${product.image || '/assets/img/no-image.png'}" 
+                                <img src="${product.image || '/assets/no-image.png'}" 
                                      alt="${product.name}" 
                                      class="img-thumbnail" 
                                      style="width: 50px; height: 50px; object-fit: cover;">

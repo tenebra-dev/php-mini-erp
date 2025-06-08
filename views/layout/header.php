@@ -44,10 +44,13 @@
             transition: all 0.3s;
             min-height: calc(100vh - var(--top-navbar-height));
             background-color: #ffffff;
-            border-radius: 8px;
-            margin-top: 10px;
-            margin-right: 10px;
+            /* Remova o border-radius e as margens laterais */
+            /* border-radius: 8px; */
+            /* margin-top: 10px; */
+            /* margin-right: 10px; */
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: calc(100vw - var(--sidebar-width));
+            overflow-x: auto;
         }
         
         .sidebar .nav-link {
@@ -154,26 +157,33 @@
 </head>
 <body>
     <!-- Top Navigation Bar -->
-    <nav class="navbar navbar-expand-md navbar-dark bg-primary fixed-top">
+    <nav class="navbar navbar-expand-md navbar-dark bg-primary fixed-top shadow-sm">
         <div class="container-fluid">
             <button class="navbar-toggler me-2 d-md-none" type="button" onclick="toggleSidebar()">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <a class="navbar-brand" href="/">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="/">
                 <i class="fas fa-chart-line me-2"></i>Mini ERP
             </a>
-            
-            <div class="d-flex align-items-center">
-                <!-- Cart Icon with Counter (if applicable) -->
-                <?php if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])): ?>
-                    <a href="/orders/cart" class="btn btn-outline-light me-3 position-relative">
-                        <i class="bi bi-cart3"></i>
-                        <span class="cart-counter"><?= count($_SESSION['cart']) ?></span>
-                    </a>
-                <?php endif; ?>
-                
+            <div class="d-flex align-items-center ms-auto gap-3">
+                <!-- Cart Icon with Counter -->
+                <?php
+                $cartCount = 0;
+                if (isset($_SESSION['cart']['items']) && is_array($_SESSION['cart']['items'])) {
+                    foreach ($_SESSION['cart']['items'] as $item) {
+                        $cartCount += isset($item['quantity']) ? (int)$item['quantity'] : 1;
+                    }
+                }
+                ?>
+                <a href="/orders/cart" class="btn btn-outline-light position-relative <?= $cartCount ? '' : 'd-none' ?>">
+                    <i class="bi bi-cart3"></i>
+                    <?php if ($cartCount > 0): ?>
+                        <span class="cart-counter"><?= $cartCount ?></span>
+                    <?php endif; ?>
+                </a>
+                <!-- User Dropdown -->
                 <div class="dropdown">
-                    <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown">
                         <i class="bi bi-person-circle me-1"></i>
                         <?= htmlspecialchars($_SESSION['user_name'] ?? 'Usuário', ENT_QUOTES, 'UTF-8') ?>
                     </button>
@@ -187,10 +197,8 @@
             </div>
         </div>
     </nav>
-    
     <!-- Sidebar Overlay for Mobile -->
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
-    
     <div class="container-fluid p-0">
         <div class="row g-0">
             <!-- Sidebar Navigation -->
