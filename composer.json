@@ -2,7 +2,9 @@
   "require": {},
   "autoload": {
     "psr-4": {
-      "App\\": "src/"
+      "migrations\\": "api/migrations/",
+      "controllers\\": "api/controllers/",
+      "services\\": "api/services/"
     }
   }
 }

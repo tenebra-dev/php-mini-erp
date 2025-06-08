@@ -1,33 +1,36 @@
 services:
-  php:
+  app:
     build:
       context: ..
-      dockerfile: ./docker/Dockerfile
-    container_name: php_test
+      dockerfile: docker/Dockerfile
     ports:
-      - "8080:80"
+      - "8000:80"
     volumes:
       - ../:/var/www/html
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
-      - DB_HOST=db
-      - DB_NAME=testdb
-      - DB_USER=testuser
-      - DB_PASS=testpass
+      APACHE_DOCUMENT_ROOT: /var/www/html/public
+      WAIT_HOSTS: db:3306
+      WAIT_TIMEOUT: 30
 
   db:
-    image: mysql:8.0
-    container_name: mysql_test
+    image: mysql:5.7
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: rootpass
       MYSQL_DATABASE: testdb
       MYSQL_USER: testuser
       MYSQL_PASSWORD: testpass
     ports:
       - "3307:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--silent"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
 
 volumes:
-  mysql_data:
+  db_data:

@@ -25,7 +25,7 @@ php-test-restapi/
 Use este comando para **derrubar completamente** os containers, imagens e volumes criados:
 
 ```
-bash docker-compose -f docker/docker-compose.yml down --rmi all --remove-orphans -v --timeout 0
+bash docker-compose -f docker/docker-compose.yml down
 ```
 
 ### 📌 Explicação das flags:
@@ -45,7 +45,7 @@ down: derruba os containers
 ### 🔽 Subir os Conteineres
 
 ```
-docker-compose -f docker/docker-compose.yml up --force-recreate --build -d
+docker-compose -f docker/docker-compose.yml up --build -d
 ```
 
 ### 📌 Explicação das flags:
