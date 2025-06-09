@@ -1,6 +1,6 @@
-# 📦 PHP REST API com Docker
+# 📦 PHP MINI ERP
 
-Este projeto é uma API REST simples construída em **PHP** com **MySQL**, utilizando **Docker** e **Apache** para facilitar o ambiente de desenvolvimento.
+Este projeto é um mini ERP construído em **PHP** com **MySQL**, utilizando **Docker** e **Apache** para facilitar o ambiente de desenvolvimento.
 
 ## 🚀 Como rodar a aplicação com Docker
 
