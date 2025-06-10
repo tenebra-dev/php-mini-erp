@@ -23,42 +23,58 @@ class OrderController {
     }
 
     public function handleOrders($params, $data) {
-        $method = $_SERVER['REQUEST_METHOD'];
-        if ($method !== 'GET') {
-            throw new \Exception('Method not allowed', 405);
+        try {
+            $method = $_SERVER['REQUEST_METHOD'];
+            if ($method !== 'GET') {
+                throw new \Exception('Method not allowed', 405);
+            }
+            $orders = $this->orderService->getAllOrders();
+            return [
+                'success' => true,
+                'data' => $orders
+            ];
+        } catch (\Exception $e) {
+            error_log("[OrderController][handleOrders] " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => $e->getCode() ?: 500
+            ];
         }
-        // Exemplo: buscar todos os pedidos
-        $orders = $this->orderService->getAllOrders();
-        return [
-            'success' => true,
-            'data' => $orders
-        ];
     }
 
     /**
      * Manipula as operações do carrinho
      */
     public function handleCart($params, $data) {
-        $method = $_SERVER['REQUEST_METHOD'];
-        
-        switch ($method) {
-            case 'GET':
-                return $this->getCart();
-            case 'POST':
-                // Verifica se é para aplicar cupom ou adicionar item
-                if (isset($data['coupon_code'])) {
-                    return $this->orderService->applyCoupon($data['coupon_code']);
-                } else {
-                    return $this->orderService->addToCart($data);
-                }
-            case 'DELETE':
-                if (isset($params['remove_coupon'])) {
-                    return $this->orderService->removeCoupon();
-                } else {
-                    return $this->orderService->clearCart();
-                }
-            default:
-                throw new \Exception('Method not allowed', 405);
+        try {
+            $method = $_SERVER['REQUEST_METHOD'];
+            switch ($method) {
+                case 'GET':
+                    return $this->getCart();
+                case 'POST':
+                    // Verifica se é para aplicar cupom ou adicionar item
+                    if (isset($data['coupon_code'])) {
+                        return $this->orderService->applyCoupon($data['coupon_code']);
+                    } else {
+                        return $this->orderService->addToCart($data);
+                    }
+                case 'DELETE':
+                    if (isset($params['remove_coupon'])) {
+                        return $this->orderService->removeCoupon();
+                    } else {
+                        return $this->orderService->clearCart();
+                    }
+                default:
+                    throw new \Exception('Method not allowed', 405);
+            }
+        } catch (\Exception $e) {
+            error_log("[OrderController][handleCart] " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => $e->getCode() ?: 500
+            ];
         }
     }
     
@@ -66,22 +82,38 @@ class OrderController {
      * Processa o checkout/finalização do pedido
      */
     public function handleCheckout($params, $data) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            throw new \Exception('Method not allowed', 405);
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new \Exception('Method not allowed', 405);
+            }
+            return $this->orderService->processCheckout($data);
+        } catch (\Exception $e) {
+            error_log("[OrderController][handleCheckout] " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => $e->getCode() ?: 500
+            ];
         }
-        
-        return $this->orderService->processCheckout($data);
     }
     
     /**
      * Manipula webhooks de atualização de status
      */
     public function handleWebhook($params, $data) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            throw new \Exception('Method not allowed', 405);
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new \Exception('Method not allowed', 405);
+            }
+            return $this->orderService->processWebhook($data);
+        } catch (\Exception $e) {
+            error_log("[OrderController][handleWebhook] " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => $e->getCode() ?: 500
+            ];
         }
-        
-        return $this->orderService->processWebhook($data);
     }
     
     // ================ Métodos auxiliares ================

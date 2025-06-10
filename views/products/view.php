@@ -135,13 +135,29 @@ $productId = isset($params['id']) ? $params['id'] : null;
     </div>
 </div>
 
+<div class="card mt-4">
+    <div class="card-body">
+        <label for="variation-select" class="form-label"><strong>Escolha uma variação:</strong></label>
+        <select id="variation-select" class="form-select mb-2"></select>
+        <button class="btn btn-primary w-100" id="add-to-cart-view">
+            <i class="fas fa-shopping-cart"></i> Adicionar ao Carrinho
+        </button>
+    </div>
+</div>
+
 <script>
 $(document).ready(function() {
-    // Carrega os dados do produto
     const productId = <?= $productId ?>;
     let totalStock = 0;
-    
-    $.get(`/api/products/${productId}`, function(product) {
+
+    apiClient.get(`/products/${productId}`).then(response => {
+        if (!response.success || !response.data) {
+            showToast('error', 'Produto não encontrado');
+            setTimeout(() => window.location.href = '/products/list', 1500);
+            return;
+        }
+        const product = response.data;
+
         // Preenche os dados do produto
         $('#product-name').text(product.name);
         $('#product-description').text(product.description || 'Nenhuma descrição fornecida');
@@ -149,40 +165,46 @@ $(document).ready(function() {
         $('#product-sku').text(product.sku || 'N/A');
         $('#created-at').text(formatDate(product.created_at));
         $('#updated-at').text(formatDate(product.updated_at));
-        
+
         // Imagem
         if(product.image) {
             $('#product-image').attr('src', product.image);
         } else {
             $('#product-image').attr('src', '/assets/img/no-image.png');
         }
-        
-        // Carrega as variações
-        return $.get(`/api/products/${productId}/variations`);
-    }).then(function(variations) {
+
+        // Variações e Estoque
         const tableBody = $('#variations-table tbody');
         tableBody.empty();
-        
-        if(variations.length > 0) {
-            variations.forEach(variation => {
-                totalStock += parseInt(variation.quantity || 0);
-                
+
+        if (product.variations && product.variations.length > 0) {
+            product.variations.forEach(variation => {
+                // Busca o estoque correspondente à variação
+                let stock = 0;
+                if (product.stock && product.stock.length > 0) {
+                    const stockObj = product.stock.find(s => 
+                        s.variation_name === variation.variation_name &&
+                        s.variation_value === variation.variation_value
+                    );
+                    stock = stockObj ? stockObj.quantity : 0;
+                }
+                totalStock += parseInt(stock);
+
                 tableBody.append(`
                     <tr>
                         <td>${variation.variation_name}</td>
                         <td>${variation.variation_value}</td>
-                        <td>${variation.quantity}</td>
+                        <td>${stock}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-secondary update-stock" 
                                     data-id="${variation.id}" 
-                                    data-quantity="${variation.quantity}">
+                                    data-quantity="${stock}">
                                 <i class="fas fa-edit"></i> Atualizar
                             </button>
                         </td>
                     </tr>
                 `);
             });
-            
             $('#total-stock').text(totalStock);
         } else {
             tableBody.append(`
@@ -193,7 +215,36 @@ $(document).ready(function() {
                 </tr>
             `);
         }
-    }).fail(function() {
+
+        // Preencher o select de variações
+        const $variationSelect = $('#variation-select');
+        $variationSelect.empty();
+        $variationSelect.append('<option value="">Selecione uma variação</option>');
+
+        if (product.variations && product.variations.length > 0) {
+            product.variations.forEach(variation => {
+                // Busca o estoque correspondente à variação
+                let stock = 0;
+                if (product.stock && product.stock.length > 0) {
+                    const stockObj = product.stock.find(s =>
+                        s.variation_name === variation.variation_name &&
+                        s.variation_value === variation.variation_value
+                    );
+                    stock = stockObj ? stockObj.quantity : 0;
+                }
+                const disabled = stock <= 0 ? 'disabled' : '';
+                $variationSelect.append(`
+                    <option value="${variation.id}" ${disabled}>
+                        ${variation.variation_name}: ${variation.variation_value} ${stock > 0 ? `(Estoque: ${stock})` : '(Sem estoque)'}
+                    </option>
+                `);
+            });
+            $variationSelect.prop('disabled', false);
+        } else {
+            $variationSelect.html('<option value="">Nenhuma variação disponível</option>');
+            $variationSelect.prop('disabled', true);
+        }
+    }).catch(function() {
         showToast('error', 'Erro ao carregar produto');
         setTimeout(() => window.location.href = '/products/list', 1500);
     });
@@ -204,20 +255,17 @@ $(document).ready(function() {
     });
     
     $('#confirm-delete').on('click', function() {
-        $.ajax({
-            url: `/api/products/${productId}`,
-            type: 'DELETE',
-            success: function() {
+        apiClient.delete(`/products/${productId}`)
+            .then(() => {
                 $('#confirmModal').modal('hide');
                 showToast('success', 'Produto excluído com sucesso!');
                 setTimeout(() => {
                     window.location.href = '/products/list';
                 }, 1500);
-            },
-            error: function() {
+            })
+            .catch(() => {
                 showToast('error', 'Erro ao excluir produto');
-            }
-        });
+            });
     });
     
     // Atualizar estoque (simplificado - você pode implementar um modal para isso)
@@ -228,20 +276,50 @@ $(document).ready(function() {
         const newQuantity = prompt("Digite a nova quantidade em estoque:", currentQuantity);
         
         if(newQuantity !== null && !isNaN(newQuantity)) {
-            $.ajax({
-                url: `/api/products/variations/${variationId}/stock`,
-                type: 'PUT',
-                data: { quantity: newQuantity },
-                success: function() {
-                    showToast('success', 'Estoque atualizado com sucesso!');
-                    setTimeout(() => location.reload(), 1000);
-                },
-                error: function() {
-                    showToast('error', 'Erro ao atualizar estoque');
-                }
-            });
+            apiClient.put(`/products/variations/${variationId}/stock`, { quantity: newQuantity })
+    .then(() => {
+        showToast('success', 'Estoque atualizado com sucesso!');
+        setTimeout(() => location.reload(), 1000);
+    })
+    .catch(() => {
+        showToast('error', 'Erro ao atualizar estoque');
+    });
         }
     });
+    
+    // Adicionar ao carrinho
+    $('#add-to-cart-view').on('click', function() {
+        // productId já está definido no escopo superior
+        const variationId = $('#variation-select').val();
+        const quantity = 1;
+
+        if (!variationId) {
+            showToast('error', 'Selecione uma variação!');
+            return;
+        }
+
+        apiClient.post('/cart', {
+            product_id: productId,
+            variation_id: variationId,
+            quantity: quantity
+        }).then(response => {
+            if (response.success) {
+                showToast('success', 'Produto adicionado ao carrinho!');
+            } else {
+                showToast('error', response.error || 'Erro ao adicionar ao carrinho');
+            }
+        });
+    });
+    
+    // Desabilita botão se não houver variação selecionada ou sem estoque
+    function toggleAddToCartBtn() {
+        const selectedOption = $variationSelect.find('option:selected');
+        const hasStock = selectedOption.text().includes('Estoque:') && !selectedOption.text().includes('Sem estoque');
+        $('#add-to-cart-view').prop('disabled', !hasStock || !$variationSelect.val());
+    }
+
+    $variationSelect.on('change', toggleAddToCartBtn);
+    toggleAddToCartBtn();
     
     // Funções auxiliares
     function formatDate(dateString) {

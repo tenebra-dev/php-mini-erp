@@ -196,8 +196,8 @@ $(document).ready(function() {
     // Carrega itens do carrinho
     $.get('/api/cart', function(response) {
         let count = 0;
-        if (response.cart && response.cart.items) {
-            Object.values(response.cart.items).forEach(item => {
+        if (response.data && response.data.items) {
+            Object.values(response.data.items).forEach(item => {
                 count += item.quantity ? parseInt(item.quantity) : 1;
             });
         }

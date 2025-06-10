@@ -12,11 +12,23 @@ class CouponService {
     }
     
     public function getCouponByCode(string $code) {
-        $stmt = $this->db->prepare("
-            SELECT *, valid_until > NOW() AS is_valid 
-            FROM coupons 
-            WHERE code = ?
-        ");
+        $driver = $this->db->getAttribute(\PDO::ATTR_DRIVER_NAME);
+
+        if ($driver === 'sqlite') {
+            $stmt = $this->db->prepare("
+                SELECT *, 
+                    (valid_until IS NULL OR datetime(valid_until) > datetime('now')) AS is_valid 
+                FROM coupons 
+                WHERE code = ?
+            ");
+        } else {
+            $stmt = $this->db->prepare("
+                SELECT *, 
+                    valid_until > NOW() AS is_valid 
+                FROM coupons 
+                WHERE code = ?
+            ");
+        }
         $stmt->execute([$code]);
         return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
@@ -40,10 +52,21 @@ class CouponService {
     }
 
     public function getAllCoupons() {
-        $stmt = $this->db->query("
-            SELECT *, valid_until > NOW() AS is_valid 
-            FROM coupons
-        ");
+        $driver = $this->db->getAttribute(\PDO::ATTR_DRIVER_NAME);
+
+        if ($driver === 'sqlite') {
+            $stmt = $this->db->query("
+                SELECT *, 
+                    (valid_until IS NULL OR datetime(valid_until) > datetime('now')) AS is_valid 
+                FROM coupons
+            ");
+        } else {
+            $stmt = $this->db->query("
+                SELECT *, 
+                    valid_until > NOW() AS is_valid 
+                FROM coupons
+            ");
+        }
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 

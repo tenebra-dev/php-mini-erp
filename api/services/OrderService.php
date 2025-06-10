@@ -25,44 +25,58 @@ class OrderService {
     
     public function addToCart($data) {
         try {
-            // Validação básica
-            if (empty($data['product_id']) || empty($data['variation_id']) || empty($data['quantity'])) {
-                throw new \Exception('Product ID, variation ID and quantity are required', 400);
+            if (empty($data['product_id']) || empty($data['quantity'])) {
+                throw new \Exception('Product ID and quantity are required', 400);
             }
-            
-            // Verifica se o produto existe e tem estoque através do ProductService
+
+            // Se o produto tem variação, exija variation_id
             $product = $this->productService->getProductById($data['product_id']);
-            $variation = $this->productService->getVariationById($data['variation_id']);
-            
-            if (!$product || !$variation || $variation['quantity'] < $data['quantity']) {
-                throw new \Exception('Product or variation not available', 400);
+            $hasVariations = !empty($this->productService->getProductVariations($data['product_id']));
+
+            if ($hasVariations && empty($data['variation_id'])) {
+                throw new \Exception('Variation ID is required for this product', 400);
             }
-            
+
+            // Se não tem variação, defina variation_id como null
+            $variationId = $hasVariations ? $data['variation_id'] : null;
+
+            // Verifica estoque
+            if ($hasVariations) {
+                $variation = $this->productService->getVariationById($variationId);
+                if (!$variation || $variation['quantity'] < $data['quantity']) {
+                    throw new \Exception('Product or variation not available', 400);
+                }
+            } else {
+                // Busca estoque do produto sem variação
+                $stockList = $this->productService->getProductStock($data['product_id']);
+                $stock = $stockList[0]['quantity'] ?? 0;
+                if ($stock < $data['quantity']) {
+                    throw new \Exception('Insufficient stock', 400);
+                }
+            }
+
             // Adiciona ao carrinho
-            $itemKey = $data['product_id'] . '_' . $data['variation_id'];
-            
+            $itemKey = $data['product_id'] . '_' . ($variationId ?? '0');
             if (isset($_SESSION['cart']['items'][$itemKey])) {
                 $_SESSION['cart']['items'][$itemKey]['quantity'] += $data['quantity'];
             } else {
                 $_SESSION['cart']['items'][$itemKey] = [
                     'product_id' => $data['product_id'],
-                    'variation_id' => $data['variation_id'],
+                    'variation_id' => $variationId,
                     'quantity' => $data['quantity'],
                     'unit_price' => $product['price'],
                     'product_name' => $product['name'],
-                    'variation_name' => $variation['variation_name'] . ': ' . $variation['variation_value']
+                    'variation_name' => $hasVariations && isset($variation) ? ($variation['variation_name'] . ': ' . $variation['variation_value']) : null
                 ];
             }
-            
-            // Atualiza totais
+
             $this->calculateCartTotals();
-            
+
             return [
                 'success' => true,
                 'message' => 'Item added to cart',
                 'cart' => $_SESSION['cart']
             ];
-            
         } catch (\Exception $e) {
             return [
                 'success' => false,
@@ -288,12 +302,12 @@ class OrderService {
             $stmt = $this->db->prepare("
                 INSERT INTO orders (
                     customer_name, customer_email, customer_cep, customer_address,
-                    customer_neighborhood, customer_city, customer_state,
+                    customer_complement, customer_neighborhood, customer_city, customer_state,
                     subtotal, shipping, discount, total, status, coupon_code
                 ) VALUES (
                     :customer_name, :customer_email, :customer_cep, :customer_address,
-                    :customer_neighborhood, :customer_city, :customer_state,
-                    :subtotal, :shipping, :discount, :total, 'pending', :coupon_code
+                    :customer_complement, :customer_neighborhood, :customer_city, :customer_state,
+                    :subtotal, :shipping, :discount, :total, :status, :coupon_code
                 )
             ");
             
@@ -302,6 +316,7 @@ class OrderService {
                 'customer_email' => $orderData['customer_email'],
                 'customer_cep' => $orderData['customer_cep'],
                 'customer_address' => $orderData['customer_address'],
+                'customer_complement' => $orderData['customer_complement'],
                 'customer_neighborhood' => $orderData['customer_neighborhood'],
                 'customer_city' => $orderData['customer_city'],
                 'customer_state' => $orderData['customer_state'],
@@ -309,6 +324,7 @@ class OrderService {
                 'shipping' => $totals['shipping'],
                 'discount' => $totals['discount'],
                 'total' => $totals['total'],
+                'status' => 'pending',
                 'coupon_code' => $orderData['coupon_code']
             ]);
             

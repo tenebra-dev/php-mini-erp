@@ -8,7 +8,7 @@ return [
             'method' => 'handleProducts'
         ],
         'products/:id' => [
-            'methods' => ['GET', 'PUT', 'DELETE'],
+            'methods' => ['GET', 'POST', 'PUT', 'DELETE'],
             'controller' => 'controllers\\ProductController',
             'method' => 'handleProduct'
         ],
@@ -16,11 +16,6 @@ return [
             'methods' => ['GET', 'POST', 'DELETE'],
             'controller' => 'controllers\\OrderController',
             'method' => 'handleCart'
-        ],
-        'cart/add' => [
-            'methods' => ['POST'],
-            'controller' => 'controllers\\OrderController',
-            'method' => 'addToCart'
         ],
         'cart/remove/:id' => [
             'methods' => ['DELETE'],

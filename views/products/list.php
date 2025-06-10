@@ -104,11 +104,8 @@ $(document).ready(function() {
     function loadProducts(page = 1) {
         const formData = $('#search-form').serialize() + '&page=' + page;
         
-        $.ajax({
-            url: '/products',
-            type: 'GET',
-            data: formData,
-            success: function(response) {
+        apiClient.get(`/products?${formData}`)
+            .then(response => {
                 // Preenche a tabela
                 let html = '';
                 if(response.data.length > 0) {
@@ -124,7 +121,7 @@ $(document).ready(function() {
                             </td>
                             <td>${product.name}</td>
                             <td>R$ ${parseFloat(product.price).toFixed(2)}</td>
-                            <td>${product.total_stock || 0}</td>
+                            <td>${product.total_stock.quantity || 0}</td>
                             <td>
                                 <div class="btn-group btn-group-sm">
                                     <a href="/products/view/${product.id}" class="btn btn-outline-info" title="Visualizar">
@@ -183,8 +180,8 @@ $(document).ready(function() {
                     
                     $('#pagination').html(paginationHtml);
                 }
-            }
-        });
+            })
+            .catch(() => { showToast('error', 'Erro ao carregar produtos'); });
     }
     
     // Carrega os produtos inicialmente
@@ -212,18 +209,15 @@ $(document).ready(function() {
     
     $('#confirm-delete').on('click', function() {
         if(productIdToDelete) {
-            $.ajax({
-                url: `/api/products/${productIdToDelete}`,
-                type: 'DELETE',
-                success: function() {
-                    $('#confirmModal').modal('hide');
-                    loadProducts();
-                    showToast('success', 'Produto excluído com sucesso!');
-                },
-                error: function() {
-                    showToast('error', 'Erro ao excluir produto');
-                }
-            });
+            apiClient.delete(`/products/${productIdToDelete}`)
+    .then(() => {
+        $('#confirmModal').modal('hide');
+        loadProducts();
+        showToast('success', 'Produto excluído com sucesso!');
+    })
+    .catch(() => {
+        showToast('error', 'Erro ao excluir produto');
+    });
         }
     });
     

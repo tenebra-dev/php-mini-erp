@@ -1,8 +1,8 @@
 <?php 
 $pageTitle = "Finalizar Compra";
 $activePage = "orders";
-include 'layout/header.php';
-include 'layout/navigation.php';
+include __DIR__ . '/../layout/header.php';
+include __DIR__ . '/../layout/navigation.php';
 ?>
 
 <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
@@ -28,7 +28,6 @@ include 'layout/navigation.php';
                                 <input type="email" class="form-control" id="customer_email" name="customer_email" required>
                             </div>
                         </div>
-                        
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label for="customer_cep" class="form-label">CEP</label>
@@ -42,7 +41,6 @@ include 'layout/navigation.php';
                                 <input type="text" class="form-control" id="customer_address" name="customer_address" required>
                             </div>
                         </div>
-                        
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label for="customer_number" class="form-label">Número</label>
@@ -53,7 +51,6 @@ include 'layout/navigation.php';
                                 <input type="text" class="form-control" id="customer_complement" name="customer_complement">
                             </div>
                         </div>
-                        
                         <div class="row">
                             <div class="col-md-5 mb-3">
                                 <label for="customer_neighborhood" class="form-label">Bairro</label>
@@ -97,110 +94,107 @@ include 'layout/navigation.php';
 </div>
 
 <script>
+$(function() {
     // Carrega o resumo do pedido
-    document.addEventListener('DOMContentLoaded', async () => {
-        const response = await makeRequest('/api/cart');
-        
-        if (response.success) {
-            renderCheckoutSummary(response.cart);
-        } else {
-            showAlert('error', 'Erro', response.error || 'Falha ao carregar carrinho');
-        }
-    });
-    
+    function loadCheckoutSummary() {
+        apiClient.get('/cart')
+            .then(function(response) {
+                const cart = response.data || response.cart || {};
+                if (response.success) {
+                    renderCheckoutSummary(cart);
+                } else {
+                    showToast('error', response.error || 'Falha ao carregar carrinho');
+                }
+            })
+            .catch(function() {
+                showToast('error', 'Falha ao carregar carrinho');
+            });
+    }
+
     function renderCheckoutSummary(cart) {
-        const summaryContainer = document.getElementById('checkoutSummary');
-        
         let html = `
             <div class="d-flex justify-content-between mb-2">
                 <span>Subtotal:</span>
-                <span>R$ ${cart.subtotal?.toFixed(2) || '0.00'}</span>
+                <span>R$ ${(parseFloat(cart.subtotal) || 0).toFixed(2)}</span>
             </div>
             <div class="d-flex justify-content-between mb-2">
                 <span>Frete:</span>
-                <span>R$ ${cart.shipping?.toFixed(2) || '0.00'}</span>
+                <span>R$ ${(parseFloat(cart.shipping) || 0).toFixed(2)}</span>
             </div>
         `;
-        
-        if (cart.discount > 0) {
+        const discount = parseFloat(cart.discount) || 0;
+        if (discount > 0) {
             html += `
                 <div class="d-flex justify-content-between mb-2 text-success">
                     <span>Desconto:</span>
-                    <span>- R$ ${cart.discount.toFixed(2)}</span>
+                    <span>- R$ ${discount.toFixed(2)}</span>
                 </div>
             `;
         }
-        
         html += `
             <hr>
             <div class="d-flex justify-content-between fw-bold fs-5">
                 <span>Total:</span>
-                <span>R$ ${cart.total?.toFixed(2) || '0.00'}</span>
+                <span>R$ ${(parseFloat(cart.total) || 0).toFixed(2)}</span>
             </div>
         `;
-        
-        summaryContainer.innerHTML = html;
+        $('#checkoutSummary').html(html);
     }
-    
-    // Busca CEP
-    document.getElementById('searchCep').addEventListener('click', async () => {
-        const cep = document.getElementById('customer_cep').value.replace(/\D/g, '');
-        
+
+    // Busca CEP via ViaCEP
+    $('#searchCep').on('click', function() {
+        const cep = $('#customer_cep').val().replace(/\D/g, '');
         if (cep.length !== 8) {
-            showAlert('warning', 'Atenção', 'CEP deve conter 8 dígitos');
+            showToast('warning', 'CEP deve conter 8 dígitos');
             return;
         }
-        
-        try {
-            const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-            const data = await response.json();
-            
-            if (data.erro) {
-                throw new Error('CEP não encontrado');
-            }
-            
-            // Preenche os campos com os dados do CEP
-            document.getElementById('customer_address').value = data.logradouro || '';
-            document.getElementById('customer_neighborhood').value = data.bairro || '';
-            document.getElementById('customer_city').value = data.localidade || '';
-            document.getElementById('customer_state').value = data.uf || '';
-            
-            // Foca no campo número
-            document.getElementById('customer_number').focus();
-            
-        } catch (error) {
-            showAlert('error', 'Erro', 'CEP não encontrado ou serviço indisponível');
-        }
+        $.getJSON(`https://viacep.com.br/ws/${cep}/json/`)
+            .done(function(data) {
+                if (data.erro) {
+                    showToast('error', 'CEP não encontrado');
+                    return;
+                }
+                $('#customer_address').val(data.logradouro || '');
+                $('#customer_neighborhood').val(data.bairro || '');
+                $('#customer_city').val(data.localidade || '');
+                $('#customer_state').val(data.uf || '');
+                $('#customer_number').focus();
+            })
+            .fail(function() {
+                showToast('error', 'CEP não encontrado ou serviço indisponível');
+            });
     });
-    
+
     // Envio do formulário de checkout
-    document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
+    $('#checkoutForm').on('submit', function(e) {
         e.preventDefault();
-        
         const formData = {
-            customer_name: document.getElementById('customer_name').value,
-            customer_email: document.getElementById('customer_email').value,
-            customer_cep: document.getElementById('customer_cep').value,
-            customer_address: `${document.getElementById('customer_address').value}, ${document.getElementById('customer_number').value}`,
-            customer_complement: document.getElementById('customer_complement').value,
-            customer_neighborhood: document.getElementById('customer_neighborhood').value,
-            customer_city: document.getElementById('customer_city').value,
-            customer_state: document.getElementById('customer_state').value
+            customer_name: $('#customer_name').val(),
+            customer_email: $('#customer_email').val(),
+            customer_cep: $('#customer_cep').val(),
+            customer_address: `${$('#customer_address').val()}, ${$('#customer_number').val()}`,
+            customer_complement: $('#customer_complement').val(),
+            customer_neighborhood: $('#customer_neighborhood').val(),
+            customer_city: $('#customer_city').val(),
+            customer_state: $('#customer_state').val()
         };
-        
-        try {
-            const response = await makeRequest('/api/checkout', 'POST', formData);
-            
-            if (response.success) {
-                showAlert('success', 'Pedido realizado!', `Seu pedido #${response.order_id} foi criado com sucesso.`);
-                setTimeout(() => window.location.href = '/orders', 2000);
-            } else {
-                showAlert('error', 'Erro', response.error || 'Falha ao finalizar pedido');
-            }
-        } catch (error) {
-            showAlert('error', 'Erro', 'Falha na comunicação com o servidor');
-        }
+        apiClient.post('/checkout', formData)
+            .then(function(response) {
+                if (response.success) {
+                    showToast('success', `Pedido realizado! Seu pedido #${response.order_id} foi criado com sucesso.`);
+                    setTimeout(() => window.location.href = '/orders', 2000);
+                } else {
+                    showToast('error', response.error || 'Falha ao finalizar pedido');
+                }
+            })
+            .catch(function() {
+                showToast('error', 'Falha na comunicação com o servidor');
+            });
     });
+
+    // Inicialização
+    loadCheckoutSummary();
+});
 </script>
 
-<?php include 'layout/footer.php'; ?>
+<?php include __DIR__ . '/../layout/footer.php'; ?>

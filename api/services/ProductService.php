@@ -177,8 +177,15 @@ class ProductService {
                 'description' => $data['description'] ?? null
             ]);
             
+            // Verifica se o produto existe ANTES de lançar erro por rowCount
             if ($stmt->rowCount() === 0) {
-                throw new Exception('Product not found', 404);
+                // Checa se o produto existe
+                $check = $this->db->prepare("SELECT id FROM products WHERE id = ?");
+                $check->execute([$id]);
+                if (!$check->fetch()) {
+                    throw new Exception('Product not found', 404);
+                }
+                // Se existe, apenas não houve alteração nos dados (não é erro)
             }
             
             // Atualiza variações e estoque se fornecidos
@@ -226,5 +233,55 @@ class ProductService {
             error_log("Delete error: " . $e->getMessage());
             throw new Exception('Failed to delete product', 500);
         }
+    }
+
+    public function getPaginatedProducts($page = 1, $perPage = 10, $filters = []) {
+        $offset = ($page - 1) * $perPage;
+        $where = [];
+        $params = [];
+
+        if (!empty($filters['search'])) {
+            $where[] = 'name LIKE :search';
+            $params['search'] = '%' . $filters['search'] . '%';
+        }
+        if (isset($filters['category']) && $filters['category'] !== '') {
+            $where[] = 'category = :category';
+            $params['category'] = $filters['category'];
+        }
+        if (isset($filters['has_stock']) && $filters['has_stock'] !== '') {
+            $where[] = $filters['has_stock'] ? 'total_stock > 0' : 'total_stock = 0';
+        }
+
+        $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+
+        // Conta total
+        $countStmt = $this->db->prepare("SELECT COUNT(*) FROM products $whereSql");
+        $countStmt->execute($params);
+        $total = (int)$countStmt->fetchColumn();
+
+        // Busca paginada
+        $stmt = $this->db->prepare("SELECT * FROM products $whereSql ORDER BY id DESC LIMIT :limit OFFSET :offset");
+        foreach ($params as $key => $value) {
+            $stmt->bindValue(':' . $key, $value);
+        }
+        $stmt->bindValue(':limit', $perPage, \PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+        $stmt->execute();
+        $products = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Adiciona estoque total
+        foreach ($products as &$product) {
+            $product['total_stock'] = $this->getProductStock($product['id']);
+        }
+
+        return [
+            'data' => $products,
+            'pagination' => [
+                'current_page' => $page,
+                'per_page' => $perPage,
+                'total' => $total,
+                'last_page' => (int)ceil($total / $perPage)
+            ]
+        ];
     }
 }

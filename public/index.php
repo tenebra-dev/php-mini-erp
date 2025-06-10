@@ -1,6 +1,9 @@
 <?php
 require __DIR__ . '/../vendor/autoload.php';
 
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+$dotenv->load();
+
 // Configurações básicas
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -54,7 +57,7 @@ if (strpos($requestUri, '/api/') === 0) {
     }
     
     // Processa como API
-    require __DIR__ . '/api_router.php';
+    require __DIR__ . '/api_routes.php';
     exit;
 }
 

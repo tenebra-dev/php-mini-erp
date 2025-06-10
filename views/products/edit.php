@@ -141,38 +141,50 @@ $(document).ready(function() {
             reader.readAsDataURL(file);
         }
     });
-    
-    // Contador para variações
+
     let variationCount = 0;
-    
-    // Carrega os dados do produto
     const productId = $('#product-id').val();
-    
-    $.get(`/api/products/${productId}`, function(product) {
+
+    // Carrega os dados do produto
+    apiClient.get(`/products/${productId}`).then(response => {
+        if (!response.success || !response.data) {
+            showToast('error', 'Produto não encontrado');
+            setTimeout(() => window.location.href = '/products/list', 1500);
+            return;
+        }
+        const product = response.data;
         $('#name').val(product.name);
         $('#description').val(product.description || '');
         $('#price').val(product.price);
         $('#sku').val(product.sku || '');
-        
+
         if(product.image) {
             $('#image-preview').html(`<img src="${product.image}" class="img-fluid" style="max-height: 180px;">`);
         }
-        
-        // Carrega as variações
-        return $.get(`/api/products/${productId}/variations`);
-    }).then(function(variations) {
+
+        // Carrega as variações e estoque
         const container = $('#variations-container');
         container.empty();
-        
-        if(variations.length > 0) {
-            variations.forEach((variation, index) => {
+
+        if(product.variations && product.variations.length > 0) {
+            product.variations.forEach((variation, index) => {
                 const template = $('#variation-template').html();
                 const newVariation = $(template.replace(/variations\[\]/g, `variations[${index}]`));
-                
+
                 newVariation.find('.variation-name').val(variation.variation_name);
                 newVariation.find('.variation-value').val(variation.variation_value);
-                newVariation.find('.variation-quantity').val(variation.quantity);
-                
+
+                // Busca o estoque correspondente à variação
+                let stock = 0;
+                if (product.stock && product.stock.length > 0) {
+                    const stockObj = product.stock.find(s =>
+                        s.variation_name === variation.variation_name &&
+                        s.variation_value === variation.variation_value
+                    );
+                    stock = stockObj ? stockObj.quantity : 0;
+                }
+                newVariation.find('.variation-quantity').val(stock);
+
                 container.append(newVariation);
                 variationCount++;
             });
@@ -184,7 +196,7 @@ $(document).ready(function() {
                 </div>
             `);
         }
-    }).fail(function() {
+    }).catch(function() {
         showToast('error', 'Erro ao carregar produto');
         setTimeout(() => window.location.href = '/products/list', 1500);
     });
@@ -217,27 +229,21 @@ $(document).ready(function() {
         e.preventDefault();
         
         const formData = new FormData(this);
-        
-        $.ajax({
-            url: `/api/products/${productId}`,
-            type: 'PUT',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                showToast('success', 'Produto atualizado com sucesso!');
-                setTimeout(() => {
-                    window.location.href = `/products/view/${productId}`;
-                }, 1500);
-            },
-            error: function(xhr) {
-                let errorMessage = 'Erro ao atualizar produto';
-                if(xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
+        formData.append('_method', 'PUT');
+        apiClient.post(`/products/${productId}`, formData)
+            .then(response => {
+                if (response.success) {
+                    showToast('success', 'Produto atualizado com sucesso!');
+                    setTimeout(() => {
+                        window.location.href = `/products/view/${productId}`;
+                    }, 1500);
+                } else {
+                    showToast('error', response.message || 'Erro ao atualizar produto');
                 }
-                showToast('error', errorMessage);
-            }
-        });
+            })
+            .catch(error => {
+                showToast('error', error.message || 'Erro ao atualizar produto');
+            });
     });
     
     // Função para exibir notificações

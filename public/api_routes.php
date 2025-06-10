@@ -100,10 +100,9 @@ foreach ($apiRoutes as $route => $config) {
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
             error_log("API Error: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine());
         }
         

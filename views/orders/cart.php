@@ -144,11 +144,12 @@ function renderOrderSummary(cart) {
             <span>R$ ${cart.shipping?.toFixed(2) || '0.00'}</span>
         </div>
     `;
-    if (cart.discount > 0) {
+    const discount = parseFloat(cart.discount) || 0;
+    if (discount > 0) {
         html += `
             <div class="d-flex justify-content-between mb-2 text-success">
                 <span>Desconto:</span>
-                <span>- R$ ${cart.discount.toFixed(2)}</span>
+                <span>- R$ ${discount.toFixed(2)}</span>
             </div>
         `;
     }

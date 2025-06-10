@@ -120,6 +120,7 @@ require __DIR__ . '/../layout/header.php';
     </div>
 </div>
 
+<script src="/js/apiClient.js"></script>
 <script>
 $(document).ready(function() {
     // Preview da imagem
@@ -140,7 +141,7 @@ $(document).ready(function() {
     // Adiciona nova variação
     $('#add-variation').click(function() {
         const template = $('#variation-template').html();
-        const newVariation = $(template.replace(/variations\[\]/g, `variations[${variationCount}]`));
+        const newVariation = $(template.replace(/\[\]/g, `[${variationCount}]`));
         
         $('#variations-container .alert').remove();
         $('#variations-container').append(newVariation);
@@ -163,34 +164,28 @@ $(document).ready(function() {
     // Validação e envio do formulário
     $('#product-form').on('submit', function(e) {
         e.preventDefault();
-        
+
         const formData = new FormData(this);
-        
+
         // Adiciona estoque padrão se não houver variações
         if($('#variations-container .variation-item').length === 0) {
             formData.append('quantity', 0);
         }
-        
-        $.ajax({
-            url: '/api/products',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                showToast('success', 'Produto cadastrado com sucesso!');
-                setTimeout(() => {
-                    window.location.href = `/products/view/${response.id}`;
-                }, 1500);
-            },
-            error: function(xhr) {
-                let errorMessage = 'Erro ao cadastrar produto';
-                if(xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
+
+        apiClient.post('/products', formData)
+            .then(response => {
+                if (response.success) {
+                    showToast('success', 'Produto cadastrado com sucesso!');
+                    setTimeout(() => {
+                        window.location.href = `/products/view/${response.product_id}`;
+                    }, 1500);
+                } else {
+                    showToast('error', response.message || 'Erro ao cadastrar produto');
                 }
-                showToast('error', errorMessage);
-            }
-        });
+            })
+            .catch(() => {
+                showToast('error', 'Erro ao cadastrar produto');
+            });
     });
     
     // Função para exibir notificações

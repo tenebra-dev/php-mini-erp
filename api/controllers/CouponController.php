@@ -12,33 +12,48 @@ class CouponController {
     }
     
     public function handleCoupons($params, $data) {
-        $method = $_SERVER['REQUEST_METHOD'];
-        
-        switch ($method) {
-            case 'GET':
-                return $this->listCoupons();
-            case 'POST':
-                return $this->createCoupon($data);
-            default:
-                throw new \Exception('Method not allowed', 405);
+        try {
+            $method = $_SERVER['REQUEST_METHOD'];
+            switch ($method) {
+                case 'GET':
+                    return $this->listCoupons();
+                case 'POST':
+                    return $this->createCoupon($data);
+                default:
+                    throw new \Exception('Method not allowed', 405);
+            }
+        } catch (\Exception $e) {
+            error_log("[CouponController][handleCoupons] " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => $e->getCode() ?: 500
+            ];
         }
     }
     
     public function handleCoupon($params, $data) {
-        $method = $_SERVER['REQUEST_METHOD'];
-        $code = $params['code'] ?? null;
-        
-        if (!$code) {
-            throw new \Exception('Coupon code is required', 400);
-        }
-        
-        switch ($method) {
-            case 'GET':
-                return $this->getCoupon($code);
-            case 'DELETE':
-                return $this->deleteCoupon($code);
-            default:
-                throw new \Exception('Method not allowed', 405);
+        try {
+            $method = $_SERVER['REQUEST_METHOD'];
+            $code = $params['code'] ?? null;
+            if (!$code) {
+                throw new \Exception('Coupon code is required', 400);
+            }
+            switch ($method) {
+                case 'GET':
+                    return $this->getCoupon($code);
+                case 'DELETE':
+                    return $this->deleteCoupon($code);
+                default:
+                    throw new \Exception('Method not allowed', 405);
+            }
+        } catch (\Exception $e) {
+            error_log("[CouponController][handleCoupon] " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => $e->getCode() ?: 500
+            ];
         }
     }
     

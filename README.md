@@ -54,18 +54,52 @@ Docker
 Docker Compose
 (Opcional) HTTPie ou curl
 
-## 🧪 Testando a API
+## ⚙️ Instalação de dependências
 
-Você pode usar ferramentas como:
-
-httpie:
-
-```
-http GET http://localhost:8080/users
-```
-
-curl:
+Ao rodar via Docker, as dependências PHP são instaladas automaticamente no container.  
+Se quiser rodar localmente (fora do Docker), execute:
 
 ```
-curl http://localhost:8080/users
+composer install
+```
+
+## 🔑 Configuração de variáveis de ambiente
+
+Copie o arquivo `.env.example` para `.env` e preencha com seus dados:
+
+```sh
+cp .env.example .env
+```
+
+Você pode configurar variáveis sensíveis (SMTP, banco, etc) em um arquivo `.env` na raiz do projeto.  
+O container carrega essas variáveis automaticamente se você usar o [vlucas/phpdotenv](https://github.com/vlucas/phpdotenv).
+
+Exemplo de `.env`:
+```
+SMTP_HOST=smtp.seuprovedor.com
+SMTP_USER=usuario@dominio.com
+SMTP_PASS=senha
+SMTP_PORT=587
+MAIL_FROM=no-reply@dominio.com
+```
+
+## 🧪 Testes automatizados
+
+Para rodar os testes (dentro do container):
+
+```
+vendor/bin/phpunit
+```
+
+Ou, se estiver fora do container:
+
+```
+docker-compose exec app vendor/bin/phpunit
+```
+
+## 📡 Exemplos de requisições API
+
+### Criar produto
+```sh
+curl -X POST http://localhost:8000/api/products -d '{"name":"Produto Teste","price":10.0}' -H "Content-Type: application/json"
 ```
