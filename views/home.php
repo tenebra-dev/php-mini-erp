@@ -16,9 +16,9 @@ require __DIR__ . '/layout/header.php';
 </div>
 
 <!-- Cards de estatísticas rápidas -->
-<div class="row mb-4 g-3">
-    <div class="col-md-3">
-        <div class="card shadow-sm border-0 bg-primary text-white h-100">
+<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3 mb-4">
+    <div class="col">
+        <div class="card shadow-sm border-0 bg-primary text-white h-100 d-flex flex-column">
             <div class="card-body d-flex align-items-center justify-content-between">
                 <div>
                     <h4 class="card-title mb-0" id="total-products">--</h4>
@@ -31,8 +31,8 @@ require __DIR__ . '/layout/header.php';
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card shadow-sm border-0 bg-success text-white h-100">
+    <div class="col">
+        <div class="card shadow-sm border-0 bg-success text-white h-100 d-flex flex-column">
             <div class="card-body d-flex align-items-center justify-content-between">
                 <div>
                     <h4 class="card-title mb-0" id="total-orders">--</h4>
@@ -45,8 +45,8 @@ require __DIR__ . '/layout/header.php';
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card shadow-sm border-0 bg-warning text-white h-100">
+    <div class="col">
+        <div class="card shadow-sm border-0 bg-warning text-white h-100 d-flex flex-column">
             <div class="card-body d-flex align-items-center justify-content-between">
                 <div>
                     <h4 class="card-title mb-0" id="total-coupons">--</h4>
@@ -59,8 +59,8 @@ require __DIR__ . '/layout/header.php';
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card shadow-sm border-0 bg-info text-white h-100">
+    <div class="col">
+        <div class="card shadow-sm border-0 bg-info text-white h-100 d-flex flex-column">
             <div class="card-body d-flex align-items-center justify-content-between">
                 <div>
                     <h4 class="card-title mb-0" id="cart-items">--</h4>
@@ -87,54 +87,62 @@ require __DIR__ . '/layout/header.php';
 <div class="row">
     <div class="col-md-4 mb-4">
         <div class="card h-100 shadow-sm border-0">
-            <div class="card-body text-center p-4">
+            <div class="card-body text-center p-4 d-flex flex-column">
                 <div class="mb-3">
                     <i class="fas fa-boxes fa-4x text-primary"></i>
                 </div>
                 <h4 class="card-title">Produtos</h4>
                 <p class="card-text text-muted">Gerencie seu catálogo de produtos, controle de estoque e variações</p>
-                <div class="d-grid gap-2">
-                    <a href="/products/list" class="btn btn-primary">
-                        <i class="bi bi-box-seam me-1"></i> Gerenciar Produtos
-                    </a>
-                    <a href="/products/create" class="btn btn-outline-primary">
-                        <i class="bi bi-plus-circle me-1"></i> Novo Produto
-                    </a>
+                <div class="mt-auto">
+                    <div class="d-grid gap-2">
+                        <a href="/products/list" class="btn btn-primary">
+                            <i class="bi bi-box-seam me-1"></i> Gerenciar Produtos
+                        </a>
+                        <a href="/products/create" class="btn btn-outline-primary">
+                            <i class="bi bi-plus-circle me-1"></i> Novo Produto
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-4 mb-4">
         <div class="card h-100 shadow-sm border-0">
-            <div class="card-body text-center p-4">
+            <div class="card-body text-center p-4 d-flex flex-column">
                 <div class="mb-3">
                     <i class="fas fa-shopping-cart fa-4x text-success"></i>
                 </div>
                 <h4 class="card-title">Pedidos</h4>
                 <p class="card-text text-muted">Visualize, gerencie e acompanhe todos os seus pedidos e vendas</p>
-                <div class="d-grid gap-2">
-                    <a href="/orders/list" class="btn btn-success">
-                        <i class="bi bi-cart me-1"></i> Ver Pedidos
-                    </a>
+                <div class="mt-auto">
+                    <div class="d-grid gap-2">
+                        <a href="/orders/list" class="btn btn-success">
+                            <i class="bi bi-cart me-1"></i> Ver Pedidos
+                        </a>
+                        <!-- Botão invisível para alinhar com os outros cards -->
+                        <a class="btn btn-outline-success invisible">Placeholder</a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-4 mb-4">
         <div class="card h-100 shadow-sm border-0">
-            <div class="card-body text-center p-4">
+            <div class="card-body text-center p-4 d-flex flex-column">
                 <div class="mb-3">
                     <i class="fas fa-tags fa-4x text-warning"></i>
                 </div>
                 <h4 class="card-title">Cupons</h4>
                 <p class="card-text text-muted">Crie e gerencie cupons de desconto para suas promoções</p>
-                <div class="d-grid gap-2">
-                    <a href="/coupons/list" class="btn btn-warning">
-                        <i class="bi bi-ticket-perforated me-1"></i> Gerenciar Cupons
-                    </a>
-                    <a href="/coupons/create" class="btn btn-outline-warning">
-                        <i class="bi bi-plus-circle me-1"></i> Novo Cupom
-                    </a>
+                <div class="mt-auto">
+                    <div class="d-grid gap-2">
+                        <a href="/coupons/list" class="btn btn-warning">
+                            <i class="bi bi-ticket-perforated me-1"></i> Gerenciar Cupons
+                        </a>
+                        <a href="/coupons/create" class="btn btn-outline-warning">
+                            <i class="bi bi-plus-circle me-1"></i> Novo Cupom
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

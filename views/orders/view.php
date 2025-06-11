@@ -46,19 +46,28 @@ $orderId = isset($params['id']) ? $params['id'] : null;
 <script>
 $(document).ready(function() {
     const orderId = <?= json_encode($orderId) ?>;
-    $.get(`/orders/${orderId}`, function(order) {
+    $.get(`/api/orders/${orderId}`, function(response) {
+        if (!response.success || !response.data) {
+            $('#order-details').html('<div class="alert alert-danger">Erro ao carregar pedido.</div>');
+            return;
+        }
+        const order = response.data;
         let html = `
             <div class="row mb-3">
                 <div class="col-md-6">
                     <p><strong>ID:</strong> ${order.id}</p>
-                    <p><strong>Cliente:</strong> ${order.customer}</p>
+                    <p><strong>Cliente:</strong> ${order.customer_name}</p>
                     <p><strong>Status:</strong> ${order.status}</p>
-                    <p><strong>Data:</strong> ${order.date}</p>
+                    <p><strong>Data:</strong> ${order.created_at ? new Date(order.created_at).toLocaleString('pt-BR') : '-'}</p>
+                    <p><strong>E-mail:</strong> ${order.customer_email}</p>
                 </div>
                 <div class="col-md-6">
                     <p><strong>Total:</strong> R$ ${parseFloat(order.total).toFixed(2)}</p>
-                    <p><strong>Endereço:</strong> ${order.address}</p>
-                    <p><strong>E-mail:</strong> ${order.email}</p>
+                    <p><strong>Endereço:</strong> ${order.customer_address}, ${order.customer_neighborhood || ''} ${order.customer_complement || ''} - ${order.customer_city}/${order.customer_state}</p>
+                    <p><strong>CEP:</strong> ${order.customer_cep}</p>
+                    <p><strong>Cupom:</strong> ${order.coupon_code || '-'}</p>
+                    <p><strong>Desconto:</strong> R$ ${parseFloat(order.discount).toFixed(2)}</p>
+                    <p><strong>Frete:</strong> R$ ${parseFloat(order.shipping).toFixed(2)}</p>
                 </div>
             </div>
             <h5 class="mt-4">Itens do Pedido</h5>
@@ -75,7 +84,7 @@ $(document).ready(function() {
                     </thead>
                     <tbody>
         `;
-        order.items.forEach(item => {
+        (order.items || []).forEach(item => {
             html += `
                 <tr>
                     <td>${item.product_name}</td>

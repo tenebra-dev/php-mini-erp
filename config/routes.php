@@ -66,6 +66,31 @@ return [
             'methods' => ['GET'],
             'controller' => 'controllers\\AddressController',
             'method' => 'getCep'
+        ],
+        'users' => [
+            'methods' => ['GET', 'POST'],
+            'controller' => 'controllers\\UserController',
+            'method' => 'handleUsers'
+        ],
+        'users/:id' => [
+            'methods' => ['GET', 'PUT', 'DELETE'],
+            'controller' => 'controllers\\UserController',
+            'method' => 'handleUser'
+        ],
+        'auth/login' => [
+            'methods' => ['POST'],
+            'controller' => 'controllers\\AuthController',
+            'method' => 'login'
+        ],
+        'auth/google' => [
+            'methods' => ['GET'],
+            'controller' => 'controllers\\AuthController',
+            'method' => 'googleRedirect'
+        ],
+        'auth/google/callback' => [
+            'methods' => ['GET'],
+            'controller' => 'controllers\\AuthController',
+            'method' => 'googleCallback'
         ]
     ],
     

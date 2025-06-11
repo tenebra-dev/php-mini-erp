@@ -3,7 +3,19 @@
     "psr-4": {
       "migrations\\": "api/migrations/",
       "controllers\\": "api/controllers/",
-      "services\\": "api/services/"
+      "services\\": "api/services/",
+      "interfaces\\": "api/interfaces/",
+      "models\\": "api/models/",
+      "dto\\product\\": "api/dto/product/",
+      "dto\\order\\": "api/dto/order/",
+      "dto\\user\\": "api/dto/user/",
+      "dto\\coupon\\": "api/dto/coupon/",
+      "dto\\email\\": "api/dto/email/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "tests\\": "tests/"
     }
   },
   "require-dev": {

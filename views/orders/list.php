@@ -87,8 +87,8 @@ $(document).ready(function() {
                         html += `
                         <tr>
                             <td>${order.id}</td>
-                            <td>${order.customer}</td>
-                            <td>${order.date}</td>
+                            <td>${order.customer_name}</td>
+                            <td>${order.created_at ? new Date(order.created_at).toLocaleString('pt-BR') : '-'}</td>
                             <td>${order.status}</td>
                             <td>R$ ${parseFloat(order.total).toFixed(2)}</td>
                             <td>

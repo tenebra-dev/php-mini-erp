@@ -3,6 +3,8 @@ namespace controllers;
 
 use services\ProductService;
 use \Exception;
+use dto\product\ProductUpdateDTO;
+use dto\product\ProductCreateDTO;
 
 class ProductController {
     private $productService;
@@ -11,6 +13,22 @@ class ProductController {
         $this->productService = new ProductService($db);
     }
     
+    /**
+     * Handles requests for products.
+     *
+     * @param array $params URL parameters
+     * @param array $data Request body data
+     * @return array Response data
+     */
+    public function __call($name, $arguments) {
+        error_log("[ProductController] Method $name not found");
+        return [
+            'success' => false,
+            'message' => 'Method not found',
+            'code' => 404
+        ];
+    }
+
     public function handleProducts($params, $data) {
         $method = $_SERVER['REQUEST_METHOD'];
         if ($method === 'POST' && isset($_POST['_method'])) {
@@ -21,7 +39,13 @@ class ProductController {
                 case 'GET':
                     return $this->getAllProducts();
                 case 'POST':
-                    return $this->createProduct($data);
+                    // POST /api/products
+                    $dto = new ProductCreateDTO($data);
+                    if (!$dto->isValid()) {
+                        throw new \Exception('Dados inválidos para criação de produto', 400);
+                    }
+                    $this->productService->createProduct($dto);
+                    return ['success' => true, 'message' => 'Produto criado com sucesso'];
                 default:
                     throw new \Exception('Method not allowed', 405);
             }
@@ -35,6 +59,13 @@ class ProductController {
         }
     }
     
+    /**
+     * Handles requests for a specific product.
+     *
+     * @param array $params URL parameters (should contain 'id')
+     * @param array $data Request body data
+     * @return array Response data
+     */
     public function handleProduct($params, $data) {
         try {
             $method = $_SERVER['REQUEST_METHOD'];
@@ -57,7 +88,13 @@ class ProductController {
                 case 'GET':
                     return $this->getProduct($id);
                 case 'PUT':
-                    return $this->updateProduct($id, $data);
+                    // PUT /api/products/:id
+                    $dto = new ProductUpdateDTO($data);
+                    if (!$dto->isValid()) {
+                        throw new \Exception('Dados inválidos para atualização de produto', 400);
+                    }
+                    $this->productService->updateProduct($id, $dto);
+                    return ['success' => true, 'message' => 'Produto atualizado'];
                 case 'DELETE':
                     return $this->deleteProduct($id);
                 default:
@@ -73,6 +110,11 @@ class ProductController {
         }
     }
     
+    /**
+     * Retrieves all products with pagination and filters.
+     *
+     * @return array Response data
+     */
     private function getAllProducts() {
         try {
             $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
@@ -98,6 +140,12 @@ class ProductController {
         }
     }
     
+    /**
+     * Retrieves a single product by ID.
+     *
+     * @param int $id Product ID
+     * @return array Response data
+     */
     private function getProduct($id) {
         try {
             $product = $this->productService->getProductById($id);
@@ -120,6 +168,12 @@ class ProductController {
         }
     }
     
+    /**
+     * Creates a new product with variations.
+     *
+     * @param array $data Product data
+     * @return array Response data
+     */
     private function createProduct($data) {
         try {
             if (empty($data['name']) || !isset($data['price'])) {
@@ -141,6 +195,13 @@ class ProductController {
         }
     }
     
+    /**
+     * Updates an existing product.
+     *
+     * @param int $id Product ID
+     * @param array $data Updated product data
+     * @return array Response data
+     */
     private function updateProduct($id, $data) {
         try {
             if (empty($data['name']) || !isset($data['price'])) {
@@ -161,6 +222,12 @@ class ProductController {
         }
     }
     
+    /**
+     * Deletes a product by ID.
+     *
+     * @param int $id Product ID
+     * @return array Response data
+     */
     private function deleteProduct($id) {
         try {
             $this->productService->deleteProduct($id);

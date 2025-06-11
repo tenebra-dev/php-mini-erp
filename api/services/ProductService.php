@@ -4,48 +4,229 @@ namespace services;
 use \PDO;
 use \Exception;
 use \PDOException;
+use dto\product\ProductUpdateDTO;
+use dto\product\ProductCreateDTO;
+use interfaces\ProductServiceInterface;
 
-class ProductService {
+/**
+ * Classe de serviço para gerenciar produtos
+ */
+class ProductService implements ProductServiceInterface {
+    /**
+     * @var \PDO
+     */
     private $db;
     
     public function __construct(\PDO $db) {
         $this->db = $db;
     }
-    
+
+    /**
+     * Retorna todos os produtos
+     *
+     * @return array
+     */
     public function getAllProducts() {
-        $stmt = $this->db->query("SELECT * FROM products");
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
-    public function getProductById($id) {
-        $stmt = $this->db->prepare("SELECT * FROM products WHERE id = ?");
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->db->query("SELECT * FROM products");
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error fetching products: " . $e->getMessage());
+            throw new Exception('Failed to fetch products', 500);
+        }
     }
 
-    public function getVariationById($variationId) {
-    $stmt = $this->db->prepare("
-        SELECT pv.*, s.quantity 
-        FROM product_variations pv
-        LEFT JOIN stock s ON pv.id = s.variation_id
-        WHERE pv.id = ?
-    ");
-    $stmt->execute([$variationId]);
-    $variation = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$variation) {
-        return null;
+    /**
+     * Retorna um produto pelo ID
+     *
+     * @param int $id
+     * @return array|null
+     */
+    public function getProductById($id) {
+        try {
+            $stmt = $this->db->prepare("SELECT * FROM products WHERE id = ?");
+            $stmt->execute([$id]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error fetching product by ID: " . $e->getMessage());
+            throw new Exception('Failed to fetch product', 500);
+        }
     }
-    
-    return [
-        'id' => $variation['id'],
-        'product_id' => $variation['product_id'],
-        'variation_name' => $variation['variation_name'],
-        'variation_value' => $variation['variation_value'],
-        'quantity' => $variation['quantity']
+
+    /**
+     * Retorna todas as variações de um produto
+     *
+     * @param int $productId
+     * @return array
+     */
+    public function getProductVariations($productId) {
+        try {
+            $stmt = $this->db->prepare("SELECT * FROM product_variations WHERE product_id = ?");
+            $stmt->execute([$productId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error fetching product variations: " . $e->getMessage());
+            throw new Exception('Failed to fetch product variations', 500);
+        }
+    }
+
+    /**
+     * Retorna o estoque de um produto
+     *
+     * @param int $productId
+     * @return array
+     */
+    public function getProductStock($productId) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT s.quantity, v.variation_name, v.variation_value 
+                FROM stock s
+                LEFT JOIN product_variations v ON s.variation_id = v.id
+                WHERE s.product_id = ?
+            ");
+            $stmt->execute([$productId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error fetching product stock: " . $e->getMessage());
+            throw new Exception('Failed to fetch product stock', 500);
+        }
+    }
+
+    /**
+     * Retorna uma variação de produto pelo ID
+     *
+     * @param int $variationId
+     * @return array|null
+     */
+    public function getVariationById($variationId) {
+        $stmt = $this->db->prepare("
+            SELECT pv.*, s.quantity 
+            FROM product_variations pv
+            LEFT JOIN stock s ON pv.id = s.variation_id
+            WHERE pv.id = ?
+        ");
+        $stmt->execute([$variationId]);
+        $variation = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$variation) {
+            return null;
+        }
+        
+        return [
+            'id' => $variation['id'],
+            'product_id' => $variation['product_id'],
+            'variation_name' => $variation['variation_name'],
+            'variation_value' => $variation['variation_value'],
+            'quantity' => $variation['quantity']
         ];
     }
 
+    /**
+     * Cria um novo produto
+     *
+     * @param \dto\product\ProductCreateDTO $dto
+     * @return int ID do produto criado
+     * @throws Exception
+     */
+    public function createProduct(ProductCreateDTO $dto) {
+        $this->db->beginTransaction();
+        try {
+            // Insere o produto
+            $stmt = $this->db->prepare("
+                INSERT INTO products (name, price, description) 
+                VALUES (:name, :price, :description)
+            ");
+            $stmt->execute([
+                'name' => trim($dto->name),
+                'price' => (float)$dto->price,
+                'description' => $dto->description ?? null
+            ]);
+            $productId = $this->db->lastInsertId();
+
+            // Processa variações e estoque
+            if (!empty($dto->variations)) {
+                foreach ($dto->variations as $variation) {
+                    $variationId = $this->createVariation($productId, $variation);
+                    $this->createStock($productId, $variationId, $variation->quantity ?? 0);
+                }
+            } else {
+                $this->createStock($productId, null, $dto->quantity ?? 0);
+            }
+
+            $this->db->commit();
+            return $productId;
+        } catch (\PDOException $e) {
+            $this->db->rollBack();
+            error_log("Product creation error: " . $e->getMessage());
+            throw new Exception('Failed to create product', 500);
+        }
+    }
+
+    /**
+     * Atualiza um produto
+     *
+     * @param int $id ID do produto
+     * @param \dto\product\ProductUpdateDTO $dto Dados para atualização
+     * @return bool
+     * @throws Exception
+     */
+    public function updateProduct($id, ProductUpdateDTO $dto) {
+        $fields = [];
+        $params = [];
+        if ($dto->name !== null) {
+            $fields[] = "name = ?";
+            $params[] = $dto->name;
+        }
+        if ($dto->price !== null) {
+            $fields[] = "price = ?";
+            $params[] = $dto->price;
+        }
+        if ($dto->description !== null) {
+            $fields[] = "description = ?";
+            $params[] = $dto->description;
+        }
+        if ($dto->quantity !== null) {
+            $fields[] = "quantity = ?";
+            $params[] = $dto->quantity;
+        }
+        // Se quiser atualizar variações, trate separadamente (normalmente é outra tabela)
+        if (!$fields) throw new \Exception("No fields to update", 400);
+        $params[] = $id;
+        $sql = "UPDATE products SET " . implode(', ', $fields) . " WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return true;
+    }
+
+    /**
+     * Deleta um produto pelo ID
+     *
+     * @param int $id ID do produto
+     * @return bool
+     * @throws Exception
+     */
+    public function deleteProduct($id) {
+        try {
+            // As foreign keys com ON DELETE CASCADE cuidam das tabelas relacionadas
+            $stmt = $this->db->prepare("DELETE FROM products WHERE id = ?");
+            $stmt->execute([$id]);
+            if ($stmt->rowCount() === 0) {
+                throw new Exception('Product not found', 404);
+            }
+            return true;
+        } catch (\PDOException $e) {
+            error_log("Delete error: " . $e->getMessage());
+            throw new Exception('Failed to delete product', 500);
+        }
+    }
+
+    /**
+     * Diminui o estoque de uma variação
+     *
+     * @param int $variationId
+     * @param int $quantity
+     * @throws Exception
+     */
     public function decreaseStock($variationId, $quantity) {
         $stmt = $this->db->prepare("
             UPDATE stock 
@@ -57,12 +238,18 @@ class ProductService {
             'quantity' => $quantity,
             'variation_id' => $variationId
         ]);
-        
         if ($stmt->rowCount() === 0) {
             throw new Exception('Insufficient stock or variation not found', 400);
         }
     }
 
+    /**
+     * Aumenta o estoque de uma variação
+     *
+     * @param int $variationId ID da variação
+     * @param int $quantity Quantidade a ser adicionada
+     * @throws Exception Se a variação não for encontrada
+     */
     public function increaseStock($variationId, $quantity) {
         $stmt = $this->db->prepare("
             UPDATE stock 
@@ -73,66 +260,18 @@ class ProductService {
             'quantity' => $quantity,
             'variation_id' => $variationId
         ]);
-        
         if ($stmt->rowCount() === 0) {
             throw new Exception('Variation not found', 404);
         }
     }
 
-    public function getProductVariations($productId) {
-        $stmt = $this->db->prepare("SELECT * FROM product_variations WHERE product_id = ?");
-        $stmt->execute([$productId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function getProductStock($productId) {
-        $stmt = $this->db->prepare("
-            SELECT s.quantity, v.variation_name, v.variation_value 
-            FROM stock s
-            LEFT JOIN product_variations v ON s.variation_id = v.id
-            WHERE s.product_id = ?
-        ");
-        $stmt->execute([$productId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
-    public function createProductWithVariations($data) {
-        $this->db->beginTransaction();
-        
-        try {
-            // Insere o produto
-            $stmt = $this->db->prepare("
-                INSERT INTO products (name, price, description) 
-                VALUES (:name, :price, :description)
-            ");
-            $stmt->execute([
-                'name' => trim($data['name']),
-                'price' => (float)$data['price'],
-                'description' => $data['description'] ?? null
-            ]);
-            
-            $productId = $this->db->lastInsertId();
-            
-            // Processa variações e estoque
-            if (!empty($data['variations'])) {
-                foreach ($data['variations'] as $variation) {
-                    $variationId = $this->createVariation($productId, $variation);
-                    $this->createStock($productId, $variationId, $variation['quantity'] ?? 0);
-                }
-            } else {
-                $this->createStock($productId, null, $data['quantity'] ?? 0);
-            }
-            
-            $this->db->commit();
-            return $productId;
-            
-        } catch (\PDOException $e) {
-            $this->db->rollBack();
-            error_log("Product creation error: " . $e->getMessage());
-            throw new Exception('Failed to create product', 500);
-        }
-    }
-    
+    /**
+     * Cria uma variação de produto
+     *
+     * @param int $productId ID do produto
+     * @param object|array $variationData Dados da variação
+     * @return int ID da variação criada
+     */
     private function createVariation($productId, $variationData) {
         $stmt = $this->db->prepare("
             INSERT INTO product_variations 
@@ -141,12 +280,19 @@ class ProductService {
         ");
         $stmt->execute([
             'product_id' => $productId,
-            'name' => $variationData['name'],
-            'value' => $variationData['value']
+            'name' => is_array($variationData) ? $variationData['name'] : $variationData->name,
+            'value' => is_array($variationData) ? $variationData['value'] : $variationData->value
         ]);
         return $this->db->lastInsertId();
     }
-    
+
+    /**
+     * Cria um registro de estoque para uma variação
+     *
+     * @param int $productId ID do produto
+     * @param int|null $variationId ID da variação (null se for o produto principal)
+     * @param int $quantity Quantidade em estoque
+     */
     private function createStock($productId, $variationId, $quantity) {
         $stmt = $this->db->prepare("
             INSERT INTO stock 
@@ -159,82 +305,15 @@ class ProductService {
             'quantity' => $quantity
         ]);
     }
-    
-    public function updateProduct($id, $data) {
-        try {
-            $stmt = $this->db->prepare("
-                UPDATE products 
-                SET name = :name, 
-                    price = :price, 
-                    description = :description
-                WHERE id = :id
-            ");
-            
-            $stmt->execute([
-                'id' => $id,
-                'name' => trim($data['name']),
-                'price' => (float)$data['price'],
-                'description' => $data['description'] ?? null
-            ]);
-            
-            // Verifica se o produto existe ANTES de lançar erro por rowCount
-            if ($stmt->rowCount() === 0) {
-                // Checa se o produto existe
-                $check = $this->db->prepare("SELECT id FROM products WHERE id = ?");
-                $check->execute([$id]);
-                if (!$check->fetch()) {
-                    throw new Exception('Product not found', 404);
-                }
-                // Se existe, apenas não houve alteração nos dados (não é erro)
-            }
-            
-            // Atualiza variações e estoque se fornecidos
-            if (isset($data['variations'])) {
-                $this->updateVariations($id, $data['variations']);
-            }
-            
-            return true;
-            
-        } catch (\PDOException $e) {
-            error_log("Update error: " . $e->getMessage());
-            throw new Exception('Failed to update product', 500);
-        }
-    }
-    
-    private function updateVariations($productId, $variations) {
-        // Remove variações existentes
-        $this->db->prepare("DELETE FROM product_variations WHERE product_id = ?")
-             ->execute([$productId]);
-        
-        // Remove estoque existente
-        $this->db->prepare("DELETE FROM stock WHERE product_id = ?")
-             ->execute([$productId]);
-        
-        // Adiciona novas variações
-        foreach ($variations as $variation) {
-            $variationId = $this->createVariation($productId, $variation);
-            $this->createStock($productId, $variationId, $variation['quantity'] ?? 0);
-        }
-    }
-    
-    public function deleteProduct($id) {
-        try {
-            // As foreign keys com ON DELETE CASCADE cuidam das tabelas relacionadas
-            $stmt = $this->db->prepare("DELETE FROM products WHERE id = ?");
-            $stmt->execute([$id]);
-            
-            if ($stmt->rowCount() === 0) {
-                throw new Exception('Product not found', 404);
-            }
-            
-            return true;
-            
-        } catch (\PDOException $e) {
-            error_log("Delete error: " . $e->getMessage());
-            throw new Exception('Failed to delete product', 500);
-        }
-    }
 
+    /**
+     * Retorna produtos paginados com filtros
+     *
+     * @param int $page Número da página
+     * @param int $perPage Número de itens por página
+     * @param array $filters Filtros de busca
+     * @return array Produtos paginados e informações de paginação
+     */
     public function getPaginatedProducts($page = 1, $perPage = 10, $filters = []) {
         $offset = ($page - 1) * $perPage;
         $where = [];
