@@ -1,5 +1,5 @@
 <?php
-namespace dto;
+namespace dto\order;
 
 class OrderCreateDTO {
     public string $customer_name;
@@ -11,6 +11,10 @@ class OrderCreateDTO {
     public ?string $customer_city;
     public ?string $customer_state;
     public ?string $coupon_code;
+    public float $subtotal;
+    public float $shipping;
+    public float $discount;
+    public float $total;
     /** @var OrderItemCreateDTO[] */
     public array $items;
 
@@ -24,6 +28,10 @@ class OrderCreateDTO {
         $this->customer_city = $data['customer_city'] ?? null;
         $this->customer_state = $data['customer_state'] ?? null;
         $this->coupon_code = $data['coupon_code'] ?? null;
+        $this->subtotal = isset($data['subtotal']) ? (float)$data['subtotal'] : 0;
+        $this->shipping = isset($data['shipping']) ? (float)$data['shipping'] : 0;
+        $this->discount = isset($data['discount']) ? (float)$data['discount'] : 0;
+        $this->total = isset($data['total']) ? (float)$data['total'] : 0;
         $this->items = [];
         foreach (($data['items'] ?? []) as $item) {
             $this->items[] = new OrderItemCreateDTO($item);

@@ -1,5 +1,5 @@
 <?php
-namespace dto;
+namespace dto\order;
 
 class OrderUpdateDTO {
     public ?string $status;

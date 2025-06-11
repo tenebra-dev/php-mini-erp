@@ -3,6 +3,8 @@ namespace controllers;
 
 use services\CouponService;
 use \Exception;
+use dto\coupon\CouponCreateDTO;
+use dto\coupon\CouponUpdateDTO;
 
 class CouponController {
     private $couponService;
@@ -24,9 +26,15 @@ class CouponController {
             }
         } catch (\Exception $e) {
             error_log("[CouponController][handleCoupons] " . $e->getMessage());
+            $userMessage = match ($e->getCode()) {
+                400 => "Preencha todos os campos obrigatórios para criar o cupom.",
+                409 => "Já existe um cupom com esse código.",
+                default => "Ocorreu um erro ao processar sua solicitação. Tente novamente."
+            };
             return [
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => $userMessage,
+                'details' => $e->getMessage(),
                 'code' => $e->getCode() ?: 500
             ];
         }
@@ -84,23 +92,23 @@ class CouponController {
             'valid_until' => $data['valid_until'] ?? null
         ];
         
-        // Criar o cupom
-        $couponId = $this->couponService->createCoupon($couponData);
-        
+        $dto = new CouponCreateDTO($data);
+        $couponId = $this->couponService->createCoupon($dto);
+
         return [
             'success' => true,
-            'message' => 'Coupon created successfully',
+            'message' => "Cupom '{$data['code']}' criado com sucesso!",
             'coupon_id' => $couponId
         ];
     }
     
     private function getCoupon($code) {
         $coupon = $this->couponService->getCouponByCode($code);
-        
+
         if (!$coupon) {
-            throw new \Exception('Coupon not found', 404);
+            throw new \Exception("Cupom '$code' não encontrado.", 404);
         }
-        
+
         return [
             'success' => true,
             'data' => $coupon
@@ -109,10 +117,10 @@ class CouponController {
     
     private function deleteCoupon($code) {
         $this->couponService->deleteCoupon($code);
-        
+
         return [
             'success' => true,
-            'message' => 'Coupon deleted successfully'
+            'message' => "Cupom '$code' excluído com sucesso!"
         ];
     }
 }

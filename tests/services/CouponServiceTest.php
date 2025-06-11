@@ -2,6 +2,7 @@
 use PHPUnit\Framework\TestCase;
 use services\CouponService;
 use migrations\MigrationRunner;
+use dto\coupon\CouponCreateDTO;
 
 require_once __DIR__ . '/../../api/services/CouponService.php';
 require_once __DIR__ . '/../../api/migrations/MigrationRunner.php';
@@ -18,21 +19,21 @@ class CouponServiceTest extends TestCase
         $this->couponService = new CouponService($pdo);
 
         // Insere um cupom válido
-        $this->couponService->createCoupon([
+        $this->couponService->createCoupon(new CouponCreateDTO([
             'code' => 'SUMMER21',
             'discount_value' => 20,
             'discount_type' => 'fixed',
             'min_value' => 0,
             'valid_until' => date('Y-m-d', strtotime('+1 day'))
-        ]);
+        ]));
         // Insere um cupom expirado
-        $this->couponService->createCoupon([
+        $this->couponService->createCoupon(new CouponCreateDTO([
             'code' => 'EXPIRED',
             'discount_value' => 20,
             'discount_type' => 'fixed',
             'min_value' => 0,
             'valid_until' => date('Y-m-d', strtotime('-1 day'))
-        ]);
+        ]));
     }
 
     public function testApplyCoupon()

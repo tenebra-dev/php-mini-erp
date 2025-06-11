@@ -16,6 +16,7 @@ class CreateOrdersTable extends Migration {
                     customer_cep TEXT NOT NULL,
                     customer_address TEXT NOT NULL,
                     customer_neighborhood TEXT,
+                    customer_complement TEXT,
                     customer_city TEXT,
                     customer_state TEXT,
                     subtotal REAL NOT NULL,

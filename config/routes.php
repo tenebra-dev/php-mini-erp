@@ -48,7 +48,7 @@ return [
             'method' => 'handleCoupons'
         ],
         'coupons/:code' => [
-            'methods' => ['GET', 'DELETE'],
+            'methods' => ['GET', 'PUT', 'DELETE'],
             'controller' => 'controllers\\CouponController',
             'method' => 'handleCoupon'
         ],
@@ -195,6 +195,26 @@ return [
                 ['title' => 'Dashboard', 'url' => '/'],
                 ['title' => 'Cupons', 'url' => '/coupons/list'],
                 ['title' => 'Novo Cupom', 'url' => '']
+            ]
+        ],
+        '/coupons/view/:code' => [
+            'title' => 'Visualizar Cupom',
+            'view' => 'coupons/view.php',
+            'active' => 'coupons',
+            'breadcrumbs' => [
+                ['title' => 'Dashboard', 'url' => '/'],
+                ['title' => 'Cupons', 'url' => '/coupons/list'],
+                ['title' => 'Detalhes do Cupom', 'url' => '']
+            ]
+        ],
+        '/coupons/edit/:code' => [
+            'title' => 'Editar Cupom',
+            'view' => 'coupons/edit.php',
+            'active' => 'coupons',
+            'breadcrumbs' => [
+                ['title' => 'Dashboard', 'url' => '/'],
+                ['title' => 'Cupons', 'url' => '/coupons/list'],
+                ['title' => 'Editar Cupom', 'url' => '']
             ]
         ]
     ]

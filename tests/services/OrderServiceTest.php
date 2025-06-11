@@ -112,4 +112,63 @@ class OrderServiceTest extends TestCase
         $this->assertTrue($result['success'], $result['message'] ?? 'Falha no checkout');
         $this->assertArrayHasKey('order_id', $result);
     }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testCheckout()
+    {
+        // Simula um produto e variação válidos
+        $productId = $this->productService->createProductWithVariations([
+            'name' => 'Produto Teste',
+            'price' => 50.0,
+            'description' => 'Produto para pedido',
+            'variations' => [
+                [
+                    'name' => 'Tamanho',
+                    'value' => 'M',
+                    'quantity' => 10
+                ]
+            ]
+        ]);
+        $variations = $this->productService->getProductVariations($productId);
+        $variationId = $variations[0]['id'] ?? null;
+
+        // Simula o carrinho na sessão
+        $_SESSION['cart'] = [
+            'items' => [
+                [
+                    'product_id' => $productId,
+                    'variation_id' => $variationId,
+                    'quantity' => 2,
+                    'unit_price' => 50.0,
+                    'product_name' => 'Produto Teste',
+                    'variation_name' => 'Tamanho M'
+                ]
+            ],
+            'coupon' => null,
+            'shipping' => 10.0,
+            'subtotal' => 100.0,
+            'discount' => 0.0,
+            'total' => 110.0
+        ];
+
+        $orderData = [
+            'customer_name' => 'Cliente Teste',
+            'customer_email' => 'cliente@teste.com',
+            'customer_cep' => '01001-000',
+            'customer_address' => 'Rua Teste, 123',
+            'customer_neighborhood' => 'Centro',
+            'customer_city' => 'São Paulo',
+            'customer_state' => 'SP'
+        ];
+
+        ob_start(); // Suprime saída do "envio de e-mail"
+        $result = $this->orderService->processCheckout($orderData);
+        ob_end_clean();
+
+        $this->assertIsArray($result);
+        $this->assertTrue($result['success'], $result['message'] ?? 'Falha no checkout');
+        $this->assertArrayHasKey('order_id', $result);
+    }
 }

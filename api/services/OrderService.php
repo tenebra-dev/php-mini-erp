@@ -298,8 +298,10 @@ class OrderService implements OrderServiceInterface {
                 'coupon_code' => $_SESSION['cart']['coupon'] ?? null
             ];
 
-            // Cria o pedido
-            $orderId = $this->createOrder($orderData);
+            // Crie o DTO corretamente
+            $dto = new \dto\order\OrderCreateDTO($orderData);
+
+            $orderId = $this->createOrder($dto);
 
             // Atualiza estoque através do ProductService
             foreach ($_SESSION['cart']['items'] as $item) {
@@ -510,12 +512,12 @@ class OrderService implements OrderServiceInterface {
         foreach ($items as $item) {
             $stmt->execute([
                 'order_id' => $orderId,
-                'product_id' => $item['product_id'],
-                'variation_id' => $item['variation_id'] ?? null,
-                'quantity' => $item['quantity'],
-                'unit_price' => $item['unit_price'],
-                'product_name' => $item['product_name'],
-                'variation_name' => $item['variation_name']
+                'product_id' => $item->product_id,
+                'variation_id' => $item->variation_id ?? null,
+                'quantity' => $item->quantity,
+                'unit_price' => $item->unit_price,
+                'product_name' => $item->product_name,
+                'variation_name' => $item->variation_name ?? null
             ]);
         }
     }

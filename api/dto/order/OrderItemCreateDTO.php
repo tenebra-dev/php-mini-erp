@@ -1,5 +1,5 @@
 <?php
-namespace dto;
+namespace dto\order;
 
 class OrderItemCreateDTO {
     public int $product_id;

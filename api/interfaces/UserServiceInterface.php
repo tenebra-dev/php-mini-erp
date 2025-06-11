@@ -1,8 +1,8 @@
 <?php
 namespace interfaces;
 
-use dto\UserCreateDTO;
-use dto\UserUpdateDTO;
+use dto\user\UserCreateDTO;
+use dto\user\UserUpdateDTO;
 
 interface UserServiceInterface {
     public function getAllUsers();

@@ -426,4 +426,27 @@ class OrderController {
             'data' => $_SESSION['cart']
         ];
     }
+    
+    /**
+     * Remove um item do carrinho
+     * @param array $params Parâmetros da rota (ex: ['id' => 1])
+     * @param array $data Dados enviados no corpo da requisição
+     * @return array
+     */
+    public function removeFromCart($params, $data) {
+        try {
+            $id = $params['id'] ?? null;
+            if (!$id) {
+                throw new \Exception('Item ID is required', 400);
+            }
+            return $this->orderService->removeItemFromCart($id);
+        } catch (\Exception $e) {
+            error_log("[OrderController][removeFromCart] " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => $e->getCode() ?: 500
+            ];
+        }
+    }
 }

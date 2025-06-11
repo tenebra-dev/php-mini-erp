@@ -2,6 +2,7 @@
 use PHPUnit\Framework\TestCase;
 use services\ProductService;
 use migrations\MigrationRunner;
+use dto\product\ProductUpdateDTO;
 
 require_once __DIR__ . '/../../api/services/ProductService.php';
 require_once __DIR__ . '/../../api/migrations/MigrationRunner.php';
@@ -42,11 +43,12 @@ class ProductServiceTest extends TestCase
 
     public function testUpdateProduct()
     {
-        $result = $this->productService->updateProduct($this->productId, [
+        $dto = new ProductUpdateDTO([
             'name' => 'Produto Editado',
             'price' => 20.0,
             'description' => 'Nova descrição'
         ]);
+        $result = $this->productService->updateProduct($this->productId, $dto);
         $this->assertTrue($result);
 
         $product = $this->productService->getProductById($this->productId);

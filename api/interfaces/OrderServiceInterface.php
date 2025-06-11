@@ -1,8 +1,8 @@
 <?php
 namespace interfaces;
 
-use dto\OrderCreateDTO;
-use dto\OrderUpdateDTO;
+use dto\order\OrderCreateDTO;
+use dto\order\OrderUpdateDTO;
 
 interface OrderServiceInterface {
     // CRUD de pedidos

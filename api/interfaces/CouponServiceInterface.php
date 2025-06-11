@@ -1,8 +1,8 @@
 <?php
 namespace interfaces;
 
-use dto\CouponCreateDTO;
-use dto\CouponUpdateDTO;
+use dto\coupon\CouponCreateDTO;
+use dto\coupon\CouponUpdateDTO;
 
 interface CouponServiceInterface {
     public function getAllCoupons();

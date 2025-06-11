@@ -44,8 +44,12 @@ class ProductController {
                     if (!$dto->isValid()) {
                         throw new \Exception('Dados inválidos para criação de produto', 400);
                     }
-                    $this->productService->createProduct($dto);
-                    return ['success' => true, 'message' => 'Produto criado com sucesso'];
+                    $productId = $this->productService->createProduct($dto);
+                    return [
+                        'success' => true,
+                        'message' => 'Produto criado com sucesso',
+                        'product_id' => $productId
+                    ];
                 default:
                     throw new \Exception('Method not allowed', 405);
             }

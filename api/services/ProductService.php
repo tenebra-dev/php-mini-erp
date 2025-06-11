@@ -195,6 +195,20 @@ class ProductService implements ProductServiceInterface {
         $sql = "UPDATE products SET " . implode(', ', $fields) . " WHERE id = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
+
+        // Atualiza variações se enviadas
+        if (is_array($dto->variations)) {
+            // Remove variações e estoque antigos
+            $this->db->prepare("DELETE FROM stock WHERE product_id = ?")->execute([$id]);
+            $this->db->prepare("DELETE FROM product_variations WHERE product_id = ?")->execute([$id]);
+
+            // Insere as novas variações e estoque
+            foreach ($dto->variations as $variation) {
+                $variationId = $this->createVariation($id, $variation);
+                $this->createStock($id, $variationId, $variation['quantity'] ?? 0);
+            }
+        }
+
         return true;
     }
 
@@ -207,7 +221,10 @@ class ProductService implements ProductServiceInterface {
      */
     public function deleteProduct($id) {
         try {
-            // As foreign keys com ON DELETE CASCADE cuidam das tabelas relacionadas
+            // Remove estoque e variações primeiro
+            $this->db->prepare("DELETE FROM stock WHERE product_id = ?")->execute([$id]);
+            $this->db->prepare("DELETE FROM product_variations WHERE product_id = ?")->execute([$id]);
+            // Agora remove o produto
             $stmt = $this->db->prepare("DELETE FROM products WHERE id = ?");
             $stmt->execute([$id]);
             if ($stmt->rowCount() === 0) {
@@ -362,5 +379,27 @@ class ProductService implements ProductServiceInterface {
                 'last_page' => (int)ceil($total / $perPage)
             ]
         ];
+    }
+
+    /**
+     * Cria um produto com variações
+     *
+     * @param array $data Dados do produto e variações
+     * @return int ID do produto criado
+     * @throws Exception
+     */
+    public function createProductWithVariations(array $data)
+    {
+        // Cria o produto principal
+        $dto = new \dto\product\ProductCreateDTO($data);
+        $productId = $this->createProduct($dto);
+
+        // Cria variações, se houver
+        if (!empty($data['variations'])) {
+            foreach ($data['variations'] as $variation) {
+                $this->createVariation($productId, $variation);
+            }
+        }
+        return $productId;
     }
 }

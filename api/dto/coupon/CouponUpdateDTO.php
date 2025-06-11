@@ -1,5 +1,5 @@
 <?php
-namespace dto;
+namespace dto\coupon;
 
 class CouponUpdateDTO {
     public ?string $code;

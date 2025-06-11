@@ -168,28 +168,37 @@ $(function() {
     // Envio do formulário de checkout
     $('#checkoutForm').on('submit', function(e) {
         e.preventDefault();
-        const formData = {
-            customer_name: $('#customer_name').val(),
-            customer_email: $('#customer_email').val(),
-            customer_cep: $('#customer_cep').val(),
-            customer_address: `${$('#customer_address').val()}, ${$('#customer_number').val()}`,
-            customer_complement: $('#customer_complement').val(),
-            customer_neighborhood: $('#customer_neighborhood').val(),
-            customer_city: $('#customer_city').val(),
-            customer_state: $('#customer_state').val()
-        };
-        apiClient.post('/checkout', formData)
-            .then(function(response) {
-                if (response.success) {
-                    showToast('success', `Pedido realizado! Seu pedido #${response.order_id} foi criado com sucesso.`);
-                    setTimeout(() => window.location.href = '/orders', 2000);
-                } else {
-                    showToast('error', response.error || 'Falha ao finalizar pedido');
-                }
-            })
-            .catch(function() {
-                showToast('error', 'Falha na comunicação com o servidor');
-            });
+        apiClient.get('/cart').then(function(cartResp) {
+            const cart = cartResp.data || cartResp.cart || {};
+            const formData = {
+                customer_name: $('#customer_name').val(),
+                customer_email: $('#customer_email').val(),
+                customer_cep: $('#customer_cep').val(),
+                customer_address: `${$('#customer_address').val()}, ${$('#customer_number').val()}`,
+                customer_complement: $('#customer_complement').val(),
+                customer_neighborhood: $('#customer_neighborhood').val(),
+                customer_city: $('#customer_city').val(),
+                customer_state: $('#customer_state').val(),
+                subtotal: cart.subtotal,
+                shipping: cart.shipping,
+                discount: cart.discount,
+                total: cart.total,
+                items: cart.items,
+                coupon_code: cart.coupon
+            };
+            apiClient.post('/checkout', formData)
+                .then(function(response) {
+                    if (response.success) {
+                        showToast('success', `Pedido realizado! Seu pedido #${response.order_id} foi criado com sucesso.`);
+                        setTimeout(() => window.location.href = '/orders', 2000);
+                    } else {
+                        showToast('error', response.error || 'Falha ao finalizar pedido');
+                    }
+                })
+                .catch(function() {
+                    showToast('error', 'Falha na comunicação com o servidor');
+                });
+        });
     });
 
     // Inicialização
