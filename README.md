@@ -32,20 +32,6 @@ docker-compose -f docker/docker-compose.yml up --build -d
 
 -d: sobe em modo "detached" (segundo plano)
 
-## 📡 Endpoints da API
-
-A API estará disponível em:
-http://localhost:8080
-
-Exemplos:
-GET /users – lista usuários (exemplo de rota configurada)
-
-## 📌 Requisitos
-
-Docker
-Docker Compose
-(Opcional) HTTPie ou curl
-
 ## ⚙️ Instalação de dependências
 
 Ao rodar via Docker, as dependências PHP são instaladas automaticamente no container.  
