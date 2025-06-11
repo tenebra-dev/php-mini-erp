@@ -9,7 +9,7 @@ Este projeto é um mini ERP construído em **PHP** com **MySQL**, utilizando **D
 Use este comando para **derrubar completamente** os containers, imagens e volumes criados:
 
 ```
-docker-compose -f docker/docker-compose.yml down
+docker-compose -f docker/docker-compose.yml down -v
 ```
 
 ### 📌 Explicação das flags:
@@ -18,13 +18,7 @@ docker-compose -f docker/docker-compose.yml down
 
 down: derruba os containers
 
---rmi all: remove todas as imagens
-
---remove-orphans: remove containers "órfãos" que não estão mais definidos
-
 -v: remove os volumes associados (como banco de dados)
-
---timeout 0: encerra imediatamente
 
 ### 🔽 Subir os Conteineres
 
@@ -33,8 +27,6 @@ docker-compose -f docker/docker-compose.yml up --build -d
 ```
 
 ### 📌 Explicação das flags:
-
---force-recreate: força recriação dos containers mesmo que nada tenha mudado
 
 --build: força o rebuild das imagens
 
@@ -95,11 +87,4 @@ Ou, se estiver fora do container:
 
 ```
 docker-compose exec app vendor/bin/phpunit
-```
-
-## 📡 Exemplos de requisições API
-
-### Criar produto
-```sh
-curl -X POST http://localhost:8000/api/products -d '{"name":"Produto Teste","price":10.0}' -H "Content-Type: application/json"
 ```
