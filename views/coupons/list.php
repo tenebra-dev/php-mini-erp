@@ -74,8 +74,8 @@ $(document).ready(function() {
                     html += `
                         <tr>
                             <td>${coupon.code}</td>
-                            <td>${coupon.discount_type === 'percent' ? 'Percentual' : 'Fixo'}</td>
-                            <td>${coupon.discount_type === 'percent' ? coupon.discount_value + '%' : 'R$ ' + parseFloat(coupon.discount_value).toFixed(2)}</td>
+                            <td>${coupon.discount_type === 'percentage' ? 'Percentual' : 'Fixo'}</td>
+                            <td>${coupon.discount_type === 'percentage' ? coupon.discount_value + '%' : 'R$ ' + parseFloat(coupon.discount_value).toFixed(2)}</td>
                             <td>R$ ${parseFloat(coupon.min_value).toFixed(2)}</td>
                             <td>${coupon.valid_until ? new Date(coupon.valid_until).toLocaleDateString('pt-BR') : '-'}</td>
                             <td>

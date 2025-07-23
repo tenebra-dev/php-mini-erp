@@ -28,6 +28,12 @@ class UserService implements UserServiceInterface {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function getUserByEmail($email) {
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
+    }
+
     public function createUser(UserCreateDTO $dto) {
         $stmt = $this->db->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
         $stmt->execute([

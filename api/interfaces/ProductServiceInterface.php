@@ -13,7 +13,7 @@ interface ProductServiceInterface {
     public function createProduct(ProductCreateDTO $dto);
     public function updateProduct($id, ProductUpdateDTO $dto);
     public function deleteProduct($id);
-    public function decreaseStock($variationId, $quantity);
-    public function increaseStock($variationId, $quantity);
+    public function decreaseStock($productId, $variationId, $quantity);
+    public function increaseStock($productId, $variationId, $quantity);
     public function getPaginatedProducts($page = 1, $perPage = 10, $filters = []);
 }

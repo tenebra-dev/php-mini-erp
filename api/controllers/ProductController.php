@@ -39,16 +39,22 @@ class ProductController {
                 case 'GET':
                     return $this->getAllProducts();
                 case 'POST':
-                    // POST /api/products
-                    $dto = new ProductCreateDTO($data);
+                    // Combina $_POST e $_FILES para o DTO
+                    $requestData = array_merge($_POST, $_FILES);
+                    $dto = new ProductCreateDTO($requestData);
                     if (!$dto->isValid()) {
                         throw new \Exception('Dados inválidos para criação de produto', 400);
                     }
                     $productId = $this->productService->createProduct($dto);
+                    if (!$productId) {
+                        throw new \Exception('Erro ao criar produto', 500);
+                    }
+                    $product = $this->productService->getProductById($productId);
                     return [
                         'success' => true,
                         'message' => 'Produto criado com sucesso',
-                        'product_id' => $productId
+                        'product_id' => $productId,
+                        'data' => $product->toArray()
                     ];
                 default:
                     throw new \Exception('Method not allowed', 405);
@@ -81,9 +87,9 @@ class ProductController {
                 throw new \Exception('Product ID is required', 400);
             }
 
-            if ($method === 'PUT' && empty($data)) {
+            if ($method === 'PUT') {
                 $data = $_POST;
-                if (!empty($_FILES)) {
+                if (!empty($_FILES['image'])) {
                     $data['image'] = $_FILES['image'];
                 }
             }
@@ -92,13 +98,17 @@ class ProductController {
                 case 'GET':
                     return $this->getProduct($id);
                 case 'PUT':
-                    // PUT /api/products/:id
                     $dto = new ProductUpdateDTO($data);
                     if (!$dto->isValid()) {
                         throw new \Exception('Dados inválidos para atualização de produto', 400);
                     }
                     $this->productService->updateProduct($id, $dto);
-                    return ['success' => true, 'message' => 'Produto atualizado'];
+                    $product = $this->productService->getProductById($id);
+                    return [
+                        'success' => true, 
+                        'message' => 'Produto atualizado',
+                        'data' => $product->toArray()
+                    ];
                 case 'DELETE':
                     return $this->deleteProduct($id);
                 default:
@@ -129,9 +139,11 @@ class ProductController {
                 'has_stock' => $_GET['has_stock'] ?? ''
             ];
             $result = $this->productService->getPaginatedProducts($page, $perPage, $filters);
+            // Converta todos os produtos para array
+            $productsArray = array_map(fn($p) => $p->toArray(), $result['data']);
             return [
                 'success' => true,
-                'data' => $result['data'],
+                'data' => $productsArray,
                 'pagination' => $result['pagination']
             ];
         } catch (\Exception $e) {
@@ -156,11 +168,10 @@ class ProductController {
             if (!$product) {
                 throw new \Exception('Product not found', 404);
             }
-            $product['variations'] = $this->productService->getProductVariations($id);
-            $product['stock'] = $this->productService->getProductStock($id);
+            // Converta o objeto para array antes de retornar
             return [
                 'success' => true,
-                'data' => $product
+                'data' => $product->toArray()
             ];
         } catch (\Exception $e) {
             error_log("[ProductController][getProduct] " . $e->getMessage());
@@ -180,10 +191,14 @@ class ProductController {
      */
     private function createProduct($data) {
         try {
-            if (empty($data['name']) || !isset($data['price'])) {
-                throw new \Exception('Name and price are required', 400);
+            $dto = new ProductCreateDTO($data);
+            if (!$dto->isValid()) {
+                throw new \Exception('Dados inválidos para criação de produto', 400);
             }
-            $productId = $this->productService->createProductWithVariations($data);
+            $productId = $this->productService->createProduct($dto);
+            if (!$productId) {
+                throw new \Exception('Erro ao criar produto', 500);
+            }
             return [
                 'success' => true,
                 'message' => 'Product created successfully',
@@ -243,7 +258,45 @@ class ProductController {
             error_log("[ProductController][deleteProduct] " . $e->getMessage());
             return [
                 'success' => false,
-                'message' => 'Erro ao deletar produto: ' . $e->getMessage(),
+                'message' => $e->getMessage(),
+                'code' => $e->getCode() ?: 500
+            ];
+        }
+    }
+
+    public function updateVariationStock($params, $data) {
+        try {
+            $variationId = $params['variation_id'] ?? null;
+            $quantity = $data['quantity'] ?? null;
+            if (!$variationId || $quantity === null) {
+                throw new \Exception('ID da variação e quantidade são obrigatórios', 400);
+            }
+            $this->productService->updateVariationStock($variationId, (int)$quantity);
+            return ['success' => true, 'message' => 'Estoque da variação atualizado'];
+        } catch (\Exception $e) {
+            error_log("[ProductController][updateVariationStock] " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => $e->getCode() ?: 500
+            ];
+        }
+    }
+
+    public function updateProductStock($params, $data) {
+        try {
+            $productId = $params['id'] ?? null;
+            $quantity = $data['quantity'] ?? null;
+            if (!$productId || $quantity === null) {
+                throw new \Exception('ID do produto e quantidade são obrigatórios', 400);
+            }
+            $this->productService->updateProductStock($productId, (int)$quantity);
+            return ['success' => true, 'message' => 'Estoque do produto atualizado'];
+        } catch (\Exception $e) {
+            error_log("[ProductController][updateProductStock] " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
                 'code' => $e->getCode() ?: 500
             ];
         }

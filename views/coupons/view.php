@@ -38,8 +38,8 @@ $(function() {
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-3">${coupon.code}</h4>
-                        <p><strong>Tipo:</strong> ${coupon.discount_type === 'percent' ? 'Percentual (%)' : 'Valor Fixo (R$)'}</p>
-                        <p><strong>Valor:</strong> ${coupon.discount_type === 'percent' ? coupon.discount_value + '%' : 'R$ ' + parseFloat(coupon.discount_value).toFixed(2)}</p>
+                        <p><strong>Tipo:</strong> ${coupon.discount_type === 'percentage' ? 'Percentual (%)' : 'Valor Fixo (R$)'}</p>
+                        <p><strong>Valor:</strong> ${coupon.discount_type === 'percentage' ? coupon.discount_value + '%' : 'R$ ' + parseFloat(coupon.discount_value).toFixed(2)}</p>
                         <p><strong>Valor Mínimo:</strong> R$ ${parseFloat(coupon.min_value).toFixed(2)}</p>
                         <p><strong>Validade:</strong> ${coupon.valid_until ? new Date(coupon.valid_until).toLocaleDateString('pt-BR') : '-'}</p>
                         <p><strong>Status:</strong> ${coupon.is_valid ? '<span class="badge bg-success">Válido</span>' : '<span class="badge bg-secondary">Expirado</span>'}</p>

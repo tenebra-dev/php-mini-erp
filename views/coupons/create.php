@@ -27,7 +27,7 @@ require __DIR__ . '/../layout/navigation.php';
                         <label for="discount_type" class="form-label">Tipo de Desconto *</label>
                         <select class="form-select" id="discount_type" name="discount_type" required>
                             <option value="fixed">Valor Fixo (R$)</option>
-                            <option value="percent">Percentual (%)</option>
+                            <option value="percentage">Percentual (%)</option>
                         </select>
                     </div>
                 </div>
@@ -80,6 +80,24 @@ $(function() {
             }
         });
     });
+
+    function showToast(type, message) {
+        const toast = `
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+            <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header bg-${type} text-white">
+                    <strong class="me-auto">${type === 'success' ? 'Sucesso' : 'Erro'}</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            </div>
+        </div>
+        `;
+        $('body').append(toast);
+        setTimeout(() => $('.toast').remove(), 3000);
+    }
 });
 </script>
 

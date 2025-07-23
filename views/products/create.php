@@ -120,7 +120,10 @@ require __DIR__ . '/../layout/header.php';
     </div>
 </div>
 
-<script src="/js/apiClient.js"></script>
+<div id="simple-quantity-container" class="mb-3" style="display: none;">
+    <label for="simple-quantity" class="form-label">Estoque *</label>
+    <input type="number" class="form-control" id="simple-quantity" name="quantity" min="0" value="0" required>
+</div>
 <script>
 $(document).ready(function() {
     // Preview da imagem
@@ -160,6 +163,17 @@ $(document).ready(function() {
             `);
         }
     });
+    
+    // Função para alternar exibição de quantidade simples
+    function toggleSimpleQuantity() {
+        if ($('#variations-container .variation-item').length === 0) {
+            $('#simple-quantity-container').show();
+        } else {
+            $('#simple-quantity-container').hide();
+        }
+    }
+    toggleSimpleQuantity();
+    $(document).on('click', '#add-variation, .remove-variation', toggleSimpleQuantity);
     
     // Validação e envio do formulário
     $('#product-form').on('submit', function(e) {

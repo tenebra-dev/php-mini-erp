@@ -109,7 +109,7 @@ function renderCartItems(items) {
                     <img src="${item.image || 'https://via.placeholder.com/80'}" class="img-fluid rounded" alt="${item.product_name}">
                 </div>
                 <div class="col-md-5">
-                    <h6 class="mb-1">${item.product_name}</h6>
+                    <h6 class="mb-1">${item.name}</h6>
                     <small class="text-muted">${item.variation_name || 'Sem variação'}</small>
                 </div>
                 <div class="col-md-3">

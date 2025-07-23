@@ -4,6 +4,18 @@ Este projeto é um mini ERP construído em **PHP** com **MySQL**, utilizando **D
 
 ## 🚀 Como rodar a aplicação com Docker
 
+### 🔽 Subir os Conteineres
+
+```
+docker-compose -f docker/docker-compose.yml up --build -d
+```
+
+### 📌 Explicação das flags:
+
+--build: força o rebuild das imagens
+
+-d: sobe em modo "detached" (segundo plano)
+
 ### 🔽 Derrubar containers, imagens e volumes
 
 Use este comando para **derrubar completamente** os containers, imagens e volumes criados:
@@ -19,18 +31,6 @@ docker-compose -f docker/docker-compose.yml down -v
 down: derruba os containers
 
 -v: remove os volumes associados (como banco de dados)
-
-### 🔽 Subir os Conteineres
-
-```
-docker-compose -f docker/docker-compose.yml up --build -d
-```
-
-### 📌 Explicação das flags:
-
---build: força o rebuild das imagens
-
--d: sobe em modo "detached" (segundo plano)
 
 ## ⚙️ Instalação de dependências
 

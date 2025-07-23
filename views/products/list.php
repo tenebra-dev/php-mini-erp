@@ -121,7 +121,7 @@ $(document).ready(function() {
                             </td>
                             <td>${product.name}</td>
                             <td>R$ ${parseFloat(product.price).toFixed(2)}</td>
-                            <td>${product.total_stock.quantity || 0}</td>
+                            <td>${product.stock_quantity || 0}</td>
                             <td>
                                 <div class="btn-group btn-group-sm">
                                     <a href="/products/view/${product.id}" class="btn btn-outline-info" title="Visualizar">
@@ -210,14 +210,18 @@ $(document).ready(function() {
     $('#confirm-delete').on('click', function() {
         if(productIdToDelete) {
             apiClient.delete(`/products/${productIdToDelete}`)
-    .then(() => {
-        $('#confirmModal').modal('hide');
-        loadProducts();
-        showToast('success', 'Produto excluído com sucesso!');
-    })
-    .catch(() => {
-        showToast('error', 'Erro ao excluir produto');
-    });
+            .then((response) => {
+                $('#confirmModal').modal('hide');
+                if (response.success) {
+                    loadProducts();
+                    showToast('success', 'Produto excluído com sucesso!');
+                } else {
+                    showToast('error', response.message || 'Erro ao excluir produto');
+                }
+            })
+            .catch((err) => {
+                showToast('error', err?.response?.data?.message || 'Erro ao excluir produto');
+            });
         }
     });
     

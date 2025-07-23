@@ -59,6 +59,12 @@ $productId = isset($params['id']) ? $params['id'] : null;
                 </div>
             </div>
             
+            <!-- Campo de estoque para produto simples -->
+            <div id="simple-quantity-container" class="mb-3" style="display: none;">
+                <label for="simple-quantity" class="form-label">Estoque *</label>
+                <input type="number" class="form-control" id="simple-quantity" name="quantity" min="0" value="0" required>
+            </div>
+            
             <!-- Seção de Variações -->
             <div class="card mt-3">
                 <div class="card-header bg-light">
@@ -195,6 +201,28 @@ $(document).ready(function() {
                     Adicione variações como tamanho, cor, etc. Se não precisar, deixe em branco.
                 </div>
             `);
+        }
+
+        function toggleSimpleQuantity() {
+            if ($('#variations-container .variation-item').length === 0) {
+                $('#simple-quantity-container').show();
+            } else {
+                $('#simple-quantity-container').hide();
+            }
+        }
+
+        // Após carregar as variações:
+        if(product.variations && product.variations.length > 0) {
+            toggleSimpleQuantity();
+        } else {
+            // Produto simples: preenche o estoque
+            let simpleStock = 0;
+            if (product.stock && product.stock.length > 0) {
+                const stockObj = product.stock.find(s => s.variation_name === null && s.variation_value === null);
+                simpleStock = stockObj ? stockObj.quantity : 0;
+            }
+            $('#simple-quantity').val(simpleStock);
+            toggleSimpleQuantity();
         }
     }).catch(function() {
         showToast('error', 'Erro ao carregar produto');

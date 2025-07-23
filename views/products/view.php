@@ -149,6 +149,7 @@ $productId = isset($params['id']) ? $params['id'] : null;
 $(document).ready(function() {
     const productId = <?= $productId ?>;
     let totalStock = 0;
+    const $variationSelect = $('#variation-select'); 
 
     apiClient.get(`/products/${productId}`).then(response => {
         if (!response.success || !response.data) {
@@ -217,7 +218,6 @@ $(document).ready(function() {
         }
 
         // Preencher o select de variações
-        const $variationSelect = $('#variation-select');
         $variationSelect.empty();
         $variationSelect.append('<option value="">Selecione uma variação</option>');
 
@@ -243,6 +243,7 @@ $(document).ready(function() {
         } else {
             $variationSelect.html('<option value="">Nenhuma variação disponível</option>');
             $variationSelect.prop('disabled', true);
+            $('#add-to-cart-view').prop('disabled', false); // Habilita o botão
         }
     }).catch(function() {
         showToast('error', 'Erro ao carregar produto');
@@ -289,20 +290,25 @@ $(document).ready(function() {
     
     // Adicionar ao carrinho
     $('#add-to-cart-view').on('click', function() {
-        // productId já está definido no escopo superior
         const variationId = $('#variation-select').val();
         const quantity = 1;
 
-        if (!variationId) {
+        // Se houver variações, exige seleção
+        if ($('#variation-select option').length > 1 && !variationId) {
             showToast('error', 'Selecione uma variação!');
             return;
         }
 
-        apiClient.post('/cart', {
+        // Monta o payload
+        const payload = {
             product_id: productId,
-            variation_id: variationId,
             quantity: quantity
-        }).then(response => {
+        };
+        if (variationId) {
+            payload.variation_id = variationId;
+        }
+
+        apiClient.post('/cart', payload).then(response => {
             if (response.success) {
                 showToast('success', 'Produto adicionado ao carrinho!');
             } else {
@@ -313,6 +319,10 @@ $(document).ready(function() {
     
     // Desabilita botão se não houver variação selecionada ou sem estoque
     function toggleAddToCartBtn() {
+        if ($variationSelect.prop('disabled')) {
+            $('#add-to-cart-view').prop('disabled', false);
+            return;
+        }
         const selectedOption = $variationSelect.find('option:selected');
         const hasStock = selectedOption.text().includes('Estoque:') && !selectedOption.text().includes('Sem estoque');
         $('#add-to-cart-view').prop('disabled', !hasStock || !$variationSelect.val());

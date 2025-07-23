@@ -48,44 +48,59 @@ class OrderService implements OrderServiceInterface {
                 throw new \Exception('Product ID and quantity are required', 400);
             }
 
-            // Se o produto tem variação, exija variation_id
-            $product = $this->productService->getProductById($data['product_id']);
-            $hasVariations = !empty($this->productService->getProductVariations($data['product_id']));
+            $productId = $data['product_id'];
+            $quantity = (int)$data['quantity'];
+            $variationId = $data['variation_id'] ?? null;
 
-            if ($hasVariations && empty($data['variation_id'])) {
+            $product = $this->productService->getProductById($productId);
+            if (!$product) {
+                throw new \Exception('Product not found', 404);
+            }
+
+            $variations = $this->productService->getProductVariations($productId);
+            $hasVariations = !empty($variations);
+
+            if ($hasVariations && empty($variationId)) {
                 throw new \Exception('Variation ID is required for this product', 400);
             }
 
-            // Se não tem variação, defina variation_id como null
-            $variationId = $hasVariations ? $data['variation_id'] : null;
+            $price = $product->price;
+            $variationName = null;
+            $variationValue = null;
 
-            // Verifica estoque
             if ($hasVariations) {
-                $variation = $this->productService->getVariationById($variationId);
-                if (!$variation || $variation['quantity'] < $data['quantity']) {
-                    throw new \Exception('Product or variation not available', 400);
+                $variationFound = false;
+                foreach ($variations as $variation) {
+                    if ($variation['id'] == $variationId) {
+                        $price = $variation['price'] ?? $product->price;
+                        $variationName = $variation['variation_name'];
+                        $variationValue = $variation['variation_value'];
+                        $variationFound = true;
+                        break;
+                    }
                 }
-            } else {
-                // Busca estoque do produto sem variação
-                $stockList = $this->productService->getProductStock($data['product_id']);
-                $stock = $stockList[0]['quantity'] ?? 0;
-                if ($stock < $data['quantity']) {
-                    throw new \Exception('Insufficient stock', 400);
+                if (!$variationFound) {
+                    throw new \Exception('Invalid variation ID', 400);
                 }
             }
 
+            // Verifica estoque
+            $this->productService->checkStock($productId, $variationId, $quantity);
+
             // Adiciona ao carrinho
-            $itemKey = $data['product_id'] . '_' . ($variationId ?? '0');
+            $itemKey = $productId . '_' . ($variationId ?? '0');
             if (isset($_SESSION['cart']['items'][$itemKey])) {
-                $_SESSION['cart']['items'][$itemKey]['quantity'] += $data['quantity'];
+                $_SESSION['cart']['items'][$itemKey]['quantity'] += $quantity;
             } else {
                 $_SESSION['cart']['items'][$itemKey] = [
-                    'product_id' => $data['product_id'],
+                    'product_id' => $productId,
                     'variation_id' => $variationId,
-                    'quantity' => $data['quantity'],
-                    'unit_price' => $product['price'],
-                    'product_name' => $product['name'],
-                    'variation_name' => $hasVariations && isset($variation) ? ($variation['variation_name'] . ': ' . $variation['variation_value']) : null
+                    'quantity' => $quantity,
+                    'name' => $product->name,
+                    'unit_price' => $price,
+                    'image' => $product->image,
+                    'variation_name' => $variationName,
+                    'variation_value' => $variationValue
                 ];
             }
 
@@ -93,19 +108,18 @@ class OrderService implements OrderServiceInterface {
 
             return [
                 'success' => true,
-                'message' => 'Item added to cart',
+                'message' => 'Product added to cart',
                 'cart' => $_SESSION['cart']
             ];
         } catch (\Exception $e) {
+            error_log("[OrderService][addToCart] " . $e->getMessage());
             return [
                 'success' => false,
-                'error' => $e->getMessage(),
-                'cart' => $_SESSION['cart']
+                'message' => $e->getMessage(),
+                'code' => $e->getCode() ?: 500
             ];
         }
-    }
-
-    /**
+    }    /**
      * Aplica um cupom de desconto ao carrinho
      * @param string $couponCode Código do cupom
      * @return array Resultado da aplicação do cupom
@@ -236,13 +250,17 @@ class OrderService implements OrderServiceInterface {
         // Calcula frete conforme as regras do teste
         $_SESSION['cart']['shipping'] = $this->calculateShipping($subtotal);
 
-        // Aplica cupom se existir
+                // Aplica cupom se existir
         if (!empty($_SESSION['cart']['coupon'])) {
             $coupon = $this->couponService->getCouponByCode($_SESSION['cart']['coupon']);
             if ($coupon && $coupon['is_valid'] && $subtotal >= $coupon['min_value']) {
-                $_SESSION['cart']['discount'] = $coupon['discount_value'];
+                if ($coupon['discount_type'] === 'percentage') {
+                    $_SESSION['cart']['discount'] = ($subtotal * $coupon['discount_value']) / 100;
+                } else {
+                    $_SESSION['cart']['discount'] = $coupon['discount_value'];
+                }
             } else {
-                $_SESSION['cart']['coupon'] = null;
+                $_SESSION['cart']['coupon'] = null; // Cupom inválido ou não aplicável
                 $_SESSION['cart']['discount'] = 0;
             }
         } else {
@@ -306,6 +324,7 @@ class OrderService implements OrderServiceInterface {
             // Atualiza estoque através do ProductService
             foreach ($_SESSION['cart']['items'] as $item) {
                 $this->productService->decreaseStock(
+                    $item['product_id'],
                     $item['variation_id'],
                     $item['quantity']
                 );
@@ -356,6 +375,7 @@ class OrderService implements OrderServiceInterface {
                 $orderItems = $this->getOrderItems($orderId);
                 foreach ($orderItems as $item) {
                     $this->productService->increaseStock(
+                        $item['product_id'],
                         $item['variation_id'],
                         $item['quantity']
                     );
@@ -462,7 +482,11 @@ class OrderService implements OrderServiceInterface {
         if ($couponCode) {
             try {
                 $coupon = $this->couponService->validateCoupon($couponCode, $subtotal);
-                $discount = $coupon['discount_value'];
+                if ($coupon['discount_type'] === 'percentage') {
+                    $discount = ($subtotal * $coupon['discount_value']) / 100;
+                } else {
+                    $discount = $coupon['discount_value'];
+                }
             } catch (\Exception $e) {
                 // Se cupom inválido, desconto = 0
                 $discount = 0;
@@ -633,6 +657,7 @@ class OrderService implements OrderServiceInterface {
 
         foreach ($items as $item) {
             $this->productService->increaseStock(
+                $item['product_id'],
                 $item['variation_id'],
                 $item['quantity']
             );

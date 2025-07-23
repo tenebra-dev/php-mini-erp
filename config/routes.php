@@ -91,6 +91,16 @@ return [
             'methods' => ['GET'],
             'controller' => 'controllers\\AuthController',
             'method' => 'googleCallback'
+        ],
+        'products/variations/:variation_id/stock' => [
+            'methods' => ['PUT'],
+            'controller' => 'controllers\\ProductController',
+            'method' => 'updateVariationStock'
+        ],
+        'products/:id/stock' => [
+            'methods' => ['PUT'],
+            'controller' => 'controllers\\ProductController',
+            'method' => 'updateProductStock'
         ]
     ],
     
