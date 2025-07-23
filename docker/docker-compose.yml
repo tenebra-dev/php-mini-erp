@@ -14,6 +14,9 @@ services:
       APACHE_DOCUMENT_ROOT: /var/www/html/public
       WAIT_HOSTS: db:3306
       WAIT_TIMEOUT: 30
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      MAIL_FROM: no-reply@minierp.local
 
   db:
     image: mysql:5.7
@@ -31,6 +34,12 @@ services:
       interval: 5s
       timeout: 10s
       retries: 10
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025" # SMTP server
+      - "8025:8025" # Web UI
 
 volumes:
   db_data:

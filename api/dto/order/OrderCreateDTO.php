@@ -15,6 +15,7 @@ class OrderCreateDTO {
     public float $shipping;
     public float $discount;
     public float $total;
+    public string $status;
     /** @var OrderItemCreateDTO[] */
     public array $items;
 
@@ -32,6 +33,7 @@ class OrderCreateDTO {
         $this->shipping = isset($data['shipping']) ? (float)$data['shipping'] : 0;
         $this->discount = isset($data['discount']) ? (float)$data['discount'] : 0;
         $this->total = isset($data['total']) ? (float)$data['total'] : 0;
+        $this->status = $data['status'] ?? 'pending';
         $this->items = [];
         foreach (($data['items'] ?? []) as $item) {
             $this->items[] = new OrderItemCreateDTO($item);

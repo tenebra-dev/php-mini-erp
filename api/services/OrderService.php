@@ -427,23 +427,22 @@ class OrderService implements OrderServiceInterface {
                 )
             ");
 
-            $stmt->execute([
-                'customer_name' => $dto->customer_name,
-                'customer_email' => $dto->customer_email,
-                'customer_cep' => $dto->customer_cep,
-                'customer_address' => $dto->customer_address,
-                'customer_complement' => $dto->customer_complement,
-                'customer_neighborhood' => $dto->customer_neighborhood,
-                'customer_city' => $dto->customer_city,
-                'customer_state' => $dto->customer_state,
-                'subtotal' => $dto->subtotal,
-                'shipping' => $dto->shipping,
-                'discount' => $dto->discount,
-                'total' => $dto->total,
-                'status' => 'pending',
-                'coupon_code' => $dto->coupon_code
-            ]);
-
+        $stmt->execute([
+            ':customer_name' => $dto->customer_name,
+            ':customer_email' => $dto->customer_email,
+            ':customer_cep' => $dto->customer_cep,
+            ':customer_address' => $dto->customer_address,
+            ':customer_complement' => $dto->customer_complement,
+            ':customer_neighborhood' => $dto->customer_neighborhood,
+            ':customer_city' => $dto->customer_city,
+            ':customer_state' => $dto->customer_state,
+            ':subtotal' => $dto->subtotal,
+            ':shipping' => $dto->shipping,
+            ':discount' => $dto->discount,
+            ':total' => $dto->total,
+            ':status' => 'pending',
+            ':coupon_code' => $dto->coupon_code
+        ]);           
             $orderId = $this->db->lastInsertId();
 
             // Adiciona itens do pedido
